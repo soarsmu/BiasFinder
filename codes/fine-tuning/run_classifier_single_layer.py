@@ -964,47 +964,90 @@ def main():
                     model.zero_grad()
                     global_step += 1
 
-            model.eval()
-            eval_loss, eval_accuracy = 0, 0
-            nb_eval_steps, nb_eval_examples = 0, 0
-            with open(os.path.join(args.output_dir, "results_ep"+str(epoch)+".txt"),"w") as f:
-                for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluate"):
-                    input_ids = input_ids.to(device)
-                    input_mask = input_mask.to(device)
-                    segment_ids = segment_ids.to(device)
-                    label_ids = label_ids.to(device)
+            if args.do_eval :
+                model.eval()
+                eval_loss, eval_accuracy = 0, 0
+                nb_eval_steps, nb_eval_examples = 0, 0
+                with open(os.path.join(args.output_dir, "results_ep"+str(epoch)+".txt"),"w") as f:
+                    for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluate"):
+                        input_ids = input_ids.to(device)
+                        input_mask = input_mask.to(device)
+                        segment_ids = segment_ids.to(device)
+                        label_ids = label_ids.to(device)
 
-                    with torch.no_grad():
-                        tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
+                        with torch.no_grad():
+                            tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
 
-                    logits = logits.detach().cpu().numpy()
-                    label_ids = label_ids.to('cpu').numpy()
-                    outputs = np.argmax(logits, axis=1)
-                    for output in outputs:
-                        f.write(str(output)+"\n")
-                    tmp_eval_accuracy=np.sum(outputs == label_ids)
+                        logits = logits.detach().cpu().numpy()
+                        label_ids = label_ids.to('cpu').numpy()
+                        outputs = np.argmax(logits, axis=1)
+                        for output in outputs:
+                            f.write(str(output)+"\n")
+                        tmp_eval_accuracy=np.sum(outputs == label_ids)
 
-                    eval_loss += tmp_eval_loss.mean().item()
-                    eval_accuracy += tmp_eval_accuracy
+                        eval_loss += tmp_eval_loss.mean().item()
+                        eval_accuracy += tmp_eval_accuracy
 
-                    nb_eval_examples += input_ids.size(0)
-                    nb_eval_steps += 1
+                        nb_eval_examples += input_ids.size(0)
+                        nb_eval_steps += 1
 
-            eval_loss = eval_loss / nb_eval_steps
-            eval_accuracy = eval_accuracy / nb_eval_examples
+                eval_loss = eval_loss / nb_eval_steps
+                eval_accuracy = eval_accuracy / nb_eval_examples
 
-            result = {'eval_loss': eval_loss,
-                      'eval_accuracy': eval_accuracy,
-                      'global_step': global_step,
-                      'loss': tr_loss/nb_tr_steps}
+                result = {'eval_loss': eval_loss,
+                          'eval_accuracy': eval_accuracy,
+                          'global_step': global_step,
+                          'loss': tr_loss/nb_tr_steps}
 
-            output_eval_file = os.path.join(args.output_dir, "eval_results_ep"+str(epoch)+".txt")
-            print("output_eval_file=",output_eval_file)
-            with open(output_eval_file, "w") as writer:
-                logger.info("***** Eval results *****")
-                for key in sorted(result.keys()):
-                    logger.info("  %s = %s", key, str(result[key]))
-                    writer.write("%s = %s\n" % (key, str(result[key])))
+                output_eval_file = os.path.join(args.output_dir, "eval_results_ep"+str(epoch)+".txt")
+                print("output_eval_file=",output_eval_file)
+                with open(output_eval_file, "w") as writer:
+                    logger.info("***** Eval results *****")
+                    for key in sorted(result.keys()):
+                        logger.info("  %s = %s", key, str(result[key]))
+                        writer.write("%s = %s\n" % (key, str(result[key])))
+
+    if args.do_eval and not args.do_train :
+        epoch = "_eval_only"
+        model.eval()
+        eval_loss, eval_accuracy = 0, 0
+        nb_eval_steps, nb_eval_examples = 0, 0
+        with open(os.path.join(args.output_dir, "results_ep"+str(epoch)+".txt"),"w") as f:
+            for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluate"):
+                input_ids = input_ids.to(device)
+                input_mask = input_mask.to(device)
+                segment_ids = segment_ids.to(device)
+                label_ids = label_ids.to(device)
+
+                with torch.no_grad():
+                    tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
+
+                logits = logits.detach().cpu().numpy()
+                label_ids = label_ids.to('cpu').numpy()
+                outputs = np.argmax(logits, axis=1)
+                for output in outputs:
+                    f.write(str(output)+"\n")
+                tmp_eval_accuracy=np.sum(outputs == label_ids)
+
+                eval_loss += tmp_eval_loss.mean().item()
+                eval_accuracy += tmp_eval_accuracy
+
+                nb_eval_examples += input_ids.size(0)
+                nb_eval_steps += 1
+
+        eval_loss = eval_loss / nb_eval_steps
+        eval_accuracy = eval_accuracy / nb_eval_examples
+
+        result = {'eval_loss': eval_loss,
+                  'eval_accuracy': eval_accuracy}
+
+        output_eval_file = os.path.join(args.output_dir, "eval_results_ep"+str(epoch)+".txt")
+        print("output_eval_file=",output_eval_file)
+        with open(output_eval_file, "w") as writer:
+            logger.info("***** Eval results *****")
+            for key in sorted(result.keys()):
+                logger.info("  %s = %s", key, str(result[key]))
+                writer.write("%s = %s\n" % (key, str(result[key])))
 
 
 
