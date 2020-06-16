@@ -342,6 +342,41 @@ class IMDBProcessor(DataProcessor):
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
 
+class BinaryProcessor(DataProcessor):
+    """Processor for the universal data set."""
+
+    def get_train_examples(self, data_dir, data_num=None):
+        """See base class."""
+        train_data = pd.read_csv(os.path.join(data_dir, "train.csv"),header=None,sep="\t").values
+        return self._create_examples(train_data, "train", data_num=data_num)
+
+    def get_dev_examples(self, data_dir, data_num=None):
+        """See base class."""
+        dev_data = pd.read_csv(os.path.join(data_dir, "test.csv"),header=None,sep="\t").values
+        return self._create_examples(dev_data, "dev", data_num=data_num)
+
+    def get_labels(self):
+        """See base class."""
+        return ["0","1"]
+
+    def _create_examples(self, lines, set_type, data_num=None):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            if data_num is not None:
+                if i>data_num:break
+            guid = "%s-%s" % (set_type, i)
+            text_a = tokenization.convert_to_unicode(str(line[1]))
+            label = tokenization.convert_to_unicode(str(line[0]))
+            """if i%1000==0:
+                print(i)
+                print("guid=",guid)
+                print("text_a=",text_a)
+                print("label=",label)"""
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
+        return examples
+
 
 class IMDBProcessor_trunc_medium(DataProcessor):
     """Processor for the IMDB data set."""
@@ -762,6 +797,7 @@ def main():
         "ag": AGNewsProcessor,
         "ag_sep": AGNewsProcessor_sep,
         "ag_sep_aug": AGNewsProcessor_sep_aug,
+        "binary" : BinaryProcessor,
         "imdb": IMDBProcessor,
         "imdb_t_m": IMDBProcessor_trunc_medium,
         "imdb_sep": IMDBProcessor_sep,
