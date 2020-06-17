@@ -2,59 +2,50 @@
 
 This is the code and source for the paper [How to Fine-Tune BERT for Text Classification?](https://arxiv.org/abs/1905.05583)
 
-In this paper, we conduct exhaustive experiments to investigate different fine-tuning methods of BERT on text classification task and provide a general solution for BERT fine-tuning.
+Forked from https://github.com/xuyige/BERT4doc-Classification
 
+I use to this code to explore on fairness testing in Sentiment Analysis Task
 
-\*********** **update at Mar 14, 2020** \*************
-
-Our checkpoint can be loaded in BertEmbedding from the latest [fastNLP](https://github.com/fastnlp/fastNLP) package.
-
-[Link to](https://github.com/fastnlp/fastNLP/blob/master/fastNLP/embeddings/bert_embedding.py) fastNLP.embeddings.BertEmbedding
 
 ## Requirements
 
 For further pre-training, we borrow some code from Google BERT. Thus, we need:
 
-+ tensorflow==1.1x
++ tensorflow==1.1x -> currently I use tensorflow-gpu==1.14
 + spacy
 + pandas
 + numpy
++ fastNLP
 
 For fine-tuning, we borrow some codes from pytorch-pretrained-bert package (now well known as transformers). Thus, we need:
 
-+ torch>=0.4.1,<=1.2.0
-
++ torch>=0.4.1,<=1.2.0 -> currently I use torch 1.2.0 with cuda 10.0
 
 
 ## Run the code
 
-### 1) Prepare the data set:
+### 1) Prepare the dataset and pretrained model:
 
-#### Sogou News
+#### The Datasets
 
-We determine the category of the news based on the URL, such as “sports” corresponding
-to “http://sports.sohu.com”. We choose 6 categories
-– “sports”, “house”, “business”, “entertainment”,
-“women” and “technology”. The number
-of training samples selected for each class is 9,000
-and testing 1,000.
-
-Data is available at [here](https://drive.google.com/drive/folders/1Rbi0tnvsQrsHvT_353pMdIbRwDlLhfwM).
-
-#### The rest data sets
-
-The rest data sets were built by [Zhang et al. (2015)](https://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf).
+The data sets were built by [Zhang et al. (2015)](https://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf).
 We download from [URL](https://drive.google.com/drive/u/0/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M) created by Xiang Zhang.
+
+Currently, I only use IMDB movie review dataset. The notebook `data/prepare-data.ipynb` will help you to know the the IMDB dataset into train test input for the model.
+
+#### Pretrained Model
+
+Pretrained models are available at [here](https://drive.google.com/drive/folders/1Rbi0tnvsQrsHvT_353pMdIbRwDlLhfwM). Currently, I use `pytorch_model_len128_imdb.bin`. Put it inside the folder `models/pretrained/`.
 
 
 ### 2) Prepare Google BERT:
 
-[BERT-Base, Uncased](https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip)
-
-[BERT-Base, Chinese](https://storage.googleapis.com/bert_models/2018_11_03/chinese_L-12_H-768_A-12.zip)
+Download [BERT-Base, Uncased](https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip) model. You will get `uncased_L-12_H-768_A-12` folder. Put it inside `models/`.
 
 
 ### 3) Further Pre-Training:
+
+Currently, I use pretrained model and doesn't use it. But previously I try to run it and it works on AG news dataset. Since we use IMDB dataset, then I left the pre-training part.
 
 #### Generate Further Pre-Training Corpus
 
@@ -70,7 +61,7 @@ File ``agnews_corpus_test.txt`` can be found in directory ``./data``.
 python create_pretraining_data.py \
   --input_file=./AGnews_corpus.txt \
   --output_file=tmp/tf_AGnews.tfrecord \
-  --vocab_file=./uncased_L-12_H-768_A-12/vocab.txt \
+  --vocab_file=./<path to BERT>/uncased_L-12_H-768_A-12/vocab.txt \
   --do_lower_case=True \
   --max_seq_length=128 \
   --max_predictions_per_seq=20 \
@@ -83,8 +74,8 @@ python run_pretraining.py \
   --output_dir=./uncased_L-12_H-768_A-12_AGnews_pretrain \
   --do_train=True \
   --do_eval=True \
-  --bert_config_file=./uncased_L-12_H-768_A-12/bert_config.json \
-  --init_checkpoint=./uncased_L-12_H-768_A-12/bert_model.ckpt \
+  --bert_config_file=./<path to BERT>/uncased_L-12_H-768_A-12/bert_config.json \
+  --init_checkpoint=./<path to BERT>/uncased_L-12_H-768_A-12/bert_model.ckpt \
   --train_batch_size=32 \
   --max_seq_length=128 \
   --max_predictions_per_seq=20 \
@@ -105,37 +96,33 @@ python convert_tf_checkpoint_to_pytorch.py \
   --bert_config_file ./uncased_L-12_H-768_A-12_AGnews_pretrain/bert_config.json \
   --pytorch_dump_path ./uncased_L-12_H-768_A-12_AGnews_pretrain/pytorch_model.bin
 ```
+You can left this part, since we already had a pretrained model.
 
 #### Fine-Tuning on downstream tasks
 
-While fine-tuning on downstream tasks, we notice that different GPU (e.g.: 1080Ti and Titan Xp) may cause 
-slight differences in experimental results even though we fix the initial random seed.
-Here we use 1080Ti * 4 as example.
-
-Take Exp-I (See Section 5.3) as example,
+Here the command for fine-tuning
 
 ```shell
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-python run_classifier_single_layer.py \
-  --task_name imdb \
-  --do_train \
-  --do_eval \
+python fairness_test.py   \
+  --task_name binary \
   --do_lower_case \
-  --data_dir ./IMDB_data/ \
-  --vocab_file ./uncased_L-12_H-768_A-12_IMDB_pretrain/vocab.txt \
-  --bert_config_file ./uncased_L-12_H-768_A-12_IMDB_pretrain/bert_config.json \
-  --init_checkpoint ./uncased_L-12_H-768_A-12_IMDB_pretrain/pytorch_model.bin \
-  --max_seq_length 512 \
-  --train_batch_size 24 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3.0 \
-  --output_dir ./imdb \
-  --seed 42 \
-  --layers 11 10 \
+  --fine_tune_data_1_dir ./../../data/imdb/ \
+  --fine_tune_data_2_dir ./../../data/eec/ \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \ --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
+  --max_seq_length 128   \
+  --train_batch_size 24   \
+  --learning_rate 2e-5   \
+  --num_train_epochs 1   \
+  --output_dir ./../../result/imdb_eec   \
+  --seed 42   \
+  --layers 11 10   \
   --trunc_medium -1
 ```
 
 where ``num_train_epochs`` can be 3.0, 4.0, or 6.0.
+Notes: I only use 1 epoch here. 
+
 
 ``layers`` indicates list of layers which will be taken as feature for classification.
 -2 means use pooled output, -1 means concat all layer, the command above means concat
@@ -155,22 +142,72 @@ taking hidden state of `[CLS]` token as features.
 indicates layer-wise decreasing layer rate (See Section 5.3.4).
 
 
-## Further Pre-Trained Checkpoints
-
-We upload IMDb-based further pre-trained checkpoints at
-[here](https://drive.google.com/drive/folders/1Rbi0tnvsQrsHvT_353pMdIbRwDlLhfwM).
-
-For other checkpoints, please contact us by e-mail.
-
-## How to cite our paper
-
-```text
-@inproceedings{sun2019fine,
-  title={How to fine-tune {BERT} for text classification?},
-  author={Sun, Chi and Qiu, Xipeng and Xu, Yige and Huang, Xuanjing},
-  booktitle={China National Conference on Chinese Computational Linguistics},
-  pages={194--206},
-  year={2019},
-  organization={Springer}
-}
+## Notes
+Here the file structure to better know where to put the models and data:
 ```
+.
+|-- LICENSE
+|-- README.md
+|-- codes
+|   |-- FNED-FPED.ipynb
+|   |-- fine-tuning
+|   |   |-- convert_tf_checkpoint_to_pytorch.py
+|   |   |-- extract_features.py
+|   |   |-- fairness_test.py
+|   |   |-- modeling.py
+|   |   |-- modeling_last_concat_avg.py
+|   |   |-- modeling_multitask.py
+|   |   |-- modeling_single_layer.py
+|   |   |-- optimization.py
+|   |   |-- run_classifier.py
+|   |   |-- run_classifier_discriminative.py
+|   |   |-- run_classifier_multitask.py
+|   |   |-- run_classifier_no_decay.py
+|   |   |-- run_classifier_single_layer.py
+|   |   `-- tokenization.py
+|   `-- further-pre-training
+|       |-- create_pretraining_data.py
+|       |-- extract_features.py
+|       |-- generate_corpus_agnews.py
+|       |-- modeling.py
+|       |-- optimization.py
+|       |-- run_pretraining.py
+|       `-- tokenization.py
+|-- data
+|   |-- eec
+|   |   |-- data.csv
+|   |   |-- female.csv
+|   |   |-- male.csv
+|   |   |-- test.csv
+|   |   `-- train.csv
+|   |-- imdb
+|   |   |-- test.csv
+|   |   `-- train.csv
+|   `-- prepare-data.ipynb
+|-- models
+|   |-- pretrained
+|   |   `-- pytorch_model_len128_imdb.bin
+|   `-- uncased_L-12_H-768_A-12
+|       |-- bert_config.json
+|       |-- bert_model.ckpt.data-00000-of-00001
+|       |-- bert_model.ckpt.index
+|       |-- bert_model.ckpt.meta
+|       `-- vocab.txt
+|-- result
+    `-- imdb_eec
+        |-- eval_after_data_1_results_ep1.txt
+        |-- eval_after_data_2_results_ep1.txt
+        |-- eval_before_data_1_results_ep1.txt
+        |-- results_after_data_1_ep1.txt
+        |-- results_after_data_2_ep1.txt
+        |-- results_before_data_1_ep1.txt
+        `-- test.csv
+```
+
+For the EEC data, you can download it from the author. Put it into `data/eec/data.csv`
+Then use the `prepare-data.ipynb` to generate test.csv train.csv. You can use the notebook to generate female.csv, male.csv  also.
+
+
+### FNED-FPED
+The theory comes from the [AAA 2018 paper](https://www.aies-conference.com/2018/contents/papers/main/AIES_2018_paper_9.pdf).
+I implement it on `codes/FNED-FPED.ipynb`. Please make sure you have run the fine tuning to get several evalution file needed. And make sure that you put the dataset in the right folder.
