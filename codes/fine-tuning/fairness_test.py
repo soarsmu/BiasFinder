@@ -670,6 +670,16 @@ def main():
                         type=str,
                         required=True,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")    
+    parser.add_argument("--eval_data_male_dir",
+                        default=None,
+                        type=str,
+                        required=True,
+                        help="The input data dir. Should contain the .tsv files (or other data files) for the task.")    
+    parser.add_argument("--eval_data_female_dir",
+                        default=None,
+                        type=str,
+                        required=True,
+                        help="The input data dir. Should contain the .tsv files (or other data files) for the task.")    
     parser.add_argument("--bert_config_file",
                         default=None,
                         type=str,
@@ -1124,52 +1134,123 @@ def main():
             for key in sorted(result.keys()):
                 logger.info("  %s = %s", key, str(result[key]))
                 writer.write("%s = %s\n" % (key, str(result[key])))
-                
-        
-        print("Eval on data 2")
-        model.eval()
-        eval_loss, eval_accuracy = 0, 0
-        nb_eval_steps, nb_eval_examples = 0, 0
-        with open(os.path.join(args.output_dir, "results_after_data_2_ep"+str(epoch)+".txt"),"w") as f:
-            for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader_2, desc="Evaluate"):
-                input_ids = input_ids.to(device)
-                input_mask = input_mask.to(device)
-                segment_ids = segment_ids.to(device)
-                label_ids = label_ids.to(device)
 
-                with torch.no_grad():
-                    tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
+    
+    print("Initiate Eval Data Male")
+    data_dir = args.eval_data_male_dir
+    eval_examples = processor.get_dev_examples(data_dir, data_num=args.num_test_datas)
+    eval_features = convert_examples_to_features(
+        eval_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
 
-                logits = logits.detach().cpu().numpy()
-                label_ids = label_ids.to('cpu').numpy()
-                outputs = np.argmax(logits, axis=1)
-                for output in outputs:
-                    f.write(str(output)+"\n")
-                tmp_eval_accuracy=np.sum(outputs == label_ids)
+    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
 
-                eval_loss += tmp_eval_loss.mean().item()
-                eval_accuracy += tmp_eval_accuracy
+    eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+    eval_dataloader_male = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
 
-                nb_eval_examples += input_ids.size(0)
-                nb_eval_steps += 1
+    print("Initiate Eval Data Female")
+    data_dir = args.eval_data_female_dir
+    eval_examples = processor.get_dev_examples(data_dir, data_num=args.num_test_datas)
+    eval_features = convert_examples_to_features(
+        eval_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
 
-        eval_loss = eval_loss / nb_eval_steps
-        eval_accuracy = eval_accuracy / nb_eval_examples
+    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
 
-        result = {'eval_loss': eval_loss,
-                  'eval_accuracy': eval_accuracy,
-                  'global_step': global_step,
-                  'loss': tr_loss/nb_tr_steps}
+    eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+    eval_dataloader_female = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
+    
+    
+    print("Eval Data Male")
+    epoch = 0
+    model.eval()
+    eval_loss, eval_accuracy = 0, 0
+    nb_eval_steps, nb_eval_examples = 0, 0
+    with open(os.path.join(args.output_dir, "results_data_male.txt"),"w") as f:
+        for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader_male, desc="Evaluate"):
+            input_ids = input_ids.to(device)
+            input_mask = input_mask.to(device)
+            segment_ids = segment_ids.to(device)
+            label_ids = label_ids.to(device)
 
-        output_eval_file = os.path.join(args.output_dir, "eval_after_data_2_results_ep"+str(epoch)+".txt")
-        print("output_eval_file=",output_eval_file)
-        with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results *****")
-            for key in sorted(result.keys()):
-                logger.info("  %s = %s", key, str(result[key]))
-                writer.write("%s = %s\n" % (key, str(result[key])))
-                
-                
+            with torch.no_grad():
+                tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
+
+            logits = logits.detach().cpu().numpy()
+            label_ids = label_ids.to('cpu').numpy()
+            outputs = np.argmax(logits, axis=1)
+            for output in outputs:
+                f.write(str(output)+"\n")
+            tmp_eval_accuracy=np.sum(outputs == label_ids)
+
+            eval_loss += tmp_eval_loss.mean().item()
+            eval_accuracy += tmp_eval_accuracy
+
+            nb_eval_examples += input_ids.size(0)
+            nb_eval_steps += 1
+
+    eval_loss = eval_loss / nb_eval_steps
+    eval_accuracy = eval_accuracy / nb_eval_examples
+
+    result = {'eval_loss': eval_loss,
+              'eval_accuracy': eval_accuracy}
+
+    output_eval_file = os.path.join(args.output_dir, "eval_data_male_results.txt")
+    print("output_eval_file=",output_eval_file)
+    with open(output_eval_file, "w") as writer:
+        logger.info("***** Eval results *****")
+        for key in sorted(result.keys()):
+            logger.info("  %s = %s", key, str(result[key]))
+            writer.write("%s = %s\n" % (key, str(result[key])))
+            
+    
+    print("Eval Data Female")
+    epoch = 0
+    model.eval()
+    eval_loss, eval_accuracy = 0, 0
+    nb_eval_steps, nb_eval_examples = 0, 0
+    with open(os.path.join(args.output_dir, "results_data_female.txt"),"w") as f:
+        for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader_female, desc="Evaluate"):
+            input_ids = input_ids.to(device)
+            input_mask = input_mask.to(device)
+            segment_ids = segment_ids.to(device)
+            label_ids = label_ids.to(device)
+
+            with torch.no_grad():
+                tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
+
+            logits = logits.detach().cpu().numpy()
+            label_ids = label_ids.to('cpu').numpy()
+            outputs = np.argmax(logits, axis=1)
+            for output in outputs:
+                f.write(str(output)+"\n")
+            tmp_eval_accuracy=np.sum(outputs == label_ids)
+
+            eval_loss += tmp_eval_loss.mean().item()
+            eval_accuracy += tmp_eval_accuracy
+
+            nb_eval_examples += input_ids.size(0)
+            nb_eval_steps += 1
+
+    eval_loss = eval_loss / nb_eval_steps
+    eval_accuracy = eval_accuracy / nb_eval_examples
+
+    result = {'eval_loss': eval_loss,
+              'eval_accuracy': eval_accuracy}
+
+    output_eval_file = os.path.join(args.output_dir, "eval_data_female_results.txt")
+    print("output_eval_file=",output_eval_file)
+    with open(output_eval_file, "w") as writer:
+        logger.info("***** Eval results *****")
+        for key in sorted(result.keys()):
+            logger.info("  %s = %s", key, str(result[key]))
+            writer.write("%s = %s\n" % (key, str(result[key])))
+
+
 
 
 if __name__ == "__main__":
