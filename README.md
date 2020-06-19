@@ -108,7 +108,8 @@ python fairness_test.py   \
   --do_lower_case \
   --fine_tune_data_1_dir ./../../data/imdb/ \
   --fine_tune_data_2_dir ./../../data/eec/ \
-  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \ --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \ 
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
   --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
   --max_seq_length 128   \
   --train_batch_size 24   \
