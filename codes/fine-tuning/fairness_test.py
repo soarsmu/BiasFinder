@@ -851,7 +851,6 @@ def main():
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir):
         raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
     os.makedirs(args.output_dir, exist_ok=True)
-    os.system("cp " + os.path.join(args.fine_tune_data_2_dir, "test.csv") + " " + os.path.join(args.output_dir,"test.csv"))
 
     task_name = args.task_name.lower()
 
@@ -906,17 +905,17 @@ def main():
     
     print("Initiate Eval Data 1")
     global_step = 0
-    eval_examples = processor.get_dev_examples(data_dir, data_num=args.num_test_datas)
-    eval_features = convert_examples_to_features(
-        eval_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
+#     eval_examples = processor.get_dev_examples(data_dir, data_num=args.num_test_datas)
+#     eval_features = convert_examples_to_features(
+#         eval_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
 
-    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+#     all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+#     all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+#     all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+#     all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
 
-    eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-    eval_dataloader = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
+#     eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+#     eval_dataloader = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
 
     
     print("Initiate Training Data 1")
@@ -976,64 +975,50 @@ def main():
                 model.zero_grad()
                 global_step += 1
 
+#         model.eval()
+#         eval_loss, eval_accuracy = 0, 0
+#         nb_eval_steps, nb_eval_examples = 0, 0
+#         with open(os.path.join(args.output_dir, "results_before_data_1_ep"+str(epoch)+".txt"),"w") as f:
+#             for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluate"):
+#                 input_ids = input_ids.to(device)
+#                 input_mask = input_mask.to(device)
+#                 segment_ids = segment_ids.to(device)
+#                 label_ids = label_ids.to(device)
 
-        model.eval()
-        eval_loss, eval_accuracy = 0, 0
-        nb_eval_steps, nb_eval_examples = 0, 0
-        with open(os.path.join(args.output_dir, "results_before_data_1_ep"+str(epoch)+".txt"),"w") as f:
-            for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluate"):
-                input_ids = input_ids.to(device)
-                input_mask = input_mask.to(device)
-                segment_ids = segment_ids.to(device)
-                label_ids = label_ids.to(device)
+#                 with torch.no_grad():
+#                     tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
 
-                with torch.no_grad():
-                    tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
+#                 logits = logits.detach().cpu().numpy()
+#                 label_ids = label_ids.to('cpu').numpy()
+#                 outputs = np.argmax(logits, axis=1)
+#                 for output in outputs:
+#                     f.write(str(output)+"\n")
+#                 tmp_eval_accuracy=np.sum(outputs == label_ids)
 
-                logits = logits.detach().cpu().numpy()
-                label_ids = label_ids.to('cpu').numpy()
-                outputs = np.argmax(logits, axis=1)
-                for output in outputs:
-                    f.write(str(output)+"\n")
-                tmp_eval_accuracy=np.sum(outputs == label_ids)
+#                 eval_loss += tmp_eval_loss.mean().item()
+#                 eval_accuracy += tmp_eval_accuracy
 
-                eval_loss += tmp_eval_loss.mean().item()
-                eval_accuracy += tmp_eval_accuracy
+#                 nb_eval_examples += input_ids.size(0)
+#                 nb_eval_steps += 1
 
-                nb_eval_examples += input_ids.size(0)
-                nb_eval_steps += 1
+#         eval_loss = eval_loss / nb_eval_steps
+#         eval_accuracy = eval_accuracy / nb_eval_examples
 
-        eval_loss = eval_loss / nb_eval_steps
-        eval_accuracy = eval_accuracy / nb_eval_examples
+#         result = {'eval_loss': eval_loss,
+#                   'eval_accuracy': eval_accuracy,
+#                   'global_step': global_step,
+#                   'loss': tr_loss/nb_tr_steps}
 
-        result = {'eval_loss': eval_loss,
-                  'eval_accuracy': eval_accuracy,
-                  'global_step': global_step,
-                  'loss': tr_loss/nb_tr_steps}
-
-        output_eval_file = os.path.join(args.output_dir, "eval_before_data_1_results_ep"+str(epoch)+".txt")
-        print("output_eval_file=",output_eval_file)
-        with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results *****")
-            for key in sorted(result.keys()):
-                logger.info("  %s = %s", key, str(result[key]))
-                writer.write("%s = %s\n" % (key, str(result[key])))
+#         output_eval_file = os.path.join(args.output_dir, "eval_before_data_1_results_ep"+str(epoch)+".txt")
+#         print("output_eval_file=",output_eval_file)
+#         with open(output_eval_file, "w") as writer:
+#             logger.info("***** Eval results *****")
+#             for key in sorted(result.keys()):
+#                 logger.info("  %s = %s", key, str(result[key]))
+#                 writer.write("%s = %s\n" % (key, str(result[key])))
 
     data_dir = args.fine_tune_data_2_dir
-    print("Initiate Eval Data 2")
-    global_step = 0
-    eval_examples = processor.get_dev_examples(data_dir, data_num=args.num_test_datas)
-    eval_features = convert_examples_to_features(
-        eval_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
 
-    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-
-    eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-    eval_dataloader_2 = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
-    
     print("Initiate Training Data 2")
     train_examples = None
     num_train_steps = None
@@ -1090,51 +1075,7 @@ def main():
            #     print("len(middle)=",len(optimizer.get_lr()))
                 model.zero_grad()
                 global_step += 1
-
                 
-        print("Eval on data 1")
-        model.eval()
-        eval_loss, eval_accuracy = 0, 0
-        nb_eval_steps, nb_eval_examples = 0, 0
-        with open(os.path.join(args.output_dir, "results_after_data_1_ep"+str(epoch)+".txt"),"w") as f:
-            for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluate"):
-                input_ids = input_ids.to(device)
-                input_mask = input_mask.to(device)
-                segment_ids = segment_ids.to(device)
-                label_ids = label_ids.to(device)
-
-                with torch.no_grad():
-                    tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
-
-                logits = logits.detach().cpu().numpy()
-                label_ids = label_ids.to('cpu').numpy()
-                outputs = np.argmax(logits, axis=1)
-                for output in outputs:
-                    f.write(str(output)+"\n")
-                tmp_eval_accuracy=np.sum(outputs == label_ids)
-
-                eval_loss += tmp_eval_loss.mean().item()
-                eval_accuracy += tmp_eval_accuracy
-
-                nb_eval_examples += input_ids.size(0)
-                nb_eval_steps += 1
-
-        eval_loss = eval_loss / nb_eval_steps
-        eval_accuracy = eval_accuracy / nb_eval_examples
-
-        result = {'eval_loss': eval_loss,
-                  'eval_accuracy': eval_accuracy,
-                  'global_step': global_step,
-                  'loss': tr_loss/nb_tr_steps}
-
-        output_eval_file = os.path.join(args.output_dir, "eval_after_data_1_results_ep"+str(epoch)+".txt")
-        print("output_eval_file=",output_eval_file)
-        with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results *****")
-            for key in sorted(result.keys()):
-                logger.info("  %s = %s", key, str(result[key]))
-                writer.write("%s = %s\n" % (key, str(result[key])))
-
     
     print("Initiate Eval Data Male")
     data_dir = args.eval_data_male_dir
@@ -1150,21 +1091,6 @@ def main():
     eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
     eval_dataloader_male = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
 
-    print("Initiate Eval Data Female")
-    data_dir = args.eval_data_female_dir
-    eval_examples = processor.get_dev_examples(data_dir, data_num=args.num_test_datas)
-    eval_features = convert_examples_to_features(
-        eval_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
-
-    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-
-    eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-    eval_dataloader_female = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
-    
-    
     print("Eval Data Male")
     epoch = 0
     model.eval()
@@ -1207,6 +1133,19 @@ def main():
             logger.info("  %s = %s", key, str(result[key]))
             writer.write("%s = %s\n" % (key, str(result[key])))
             
+    print("Initiate Eval Data Female")
+    data_dir = args.eval_data_female_dir
+    eval_examples = processor.get_dev_examples(data_dir, data_num=args.num_test_datas)
+    eval_features = convert_examples_to_features(
+        eval_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
+
+    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+
+    eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+    eval_dataloader_female = DataLoader(eval_data, batch_size=args.eval_batch_size, shuffle=False)
     
     print("Eval Data Female")
     epoch = 0
