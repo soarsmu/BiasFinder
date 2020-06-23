@@ -1,3 +1,8 @@
 *.ipynb_checkpoints/
 */__pycache__/
 **/*.ipynb_checkpoints/
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+codes/*.ipynb_checkpoints/*
+codes/.ipynb_checkpoints/*y
+codes/.ipynb_checkpoints/
