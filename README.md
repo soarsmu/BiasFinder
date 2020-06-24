@@ -1,8 +1,8 @@
 # Fairness Bugs in Sentiment Analysis
 
-This repo contain the implementation of ICSE 2021 paper - Fairness Bugs in Sentiment Analysis.
+NLP has been deployed in many domains to make our life better. So much so that it is easy to overlook their potential to benefit society by promoting equity, diversity, and fairness. Nonetheless, as NLP systems become more human-like in their predictions, they can also perpetuate human biases. Previous work showed that sentiment analysis systems can perpetuate and accentuate inappropriate human biases, e.g., systems that consider utterances from one race or gender to be less positive, or customer support systems that prioritize a call from an angry male over a call from the equally angry female. This repo contain an exploration research related to the bias in sentiment analysis task. 
 
-Fine-tune text classification is inspired from https://github.com/xuyige/BERT4doc-Classification
+Fine-tuning text classification is inspired from https://github.com/xuyige/BERT4doc-Classification
 
 
 ## Requirements
@@ -23,6 +23,8 @@ For nlp task
 + scikit-learn
 + nltk
 + neuralcoref
+
+**Tips**: you may use docker for faster implemention on your coding environment. https://hub.docker.com/r/pytorch/pytorch/tags provide several version of PyTorch containers. Pull the appropiate pytorch container with the tag 1.2.0 version.
 
 ## Setup and Trial for the Experiment
 
@@ -71,10 +73,10 @@ Here the command for fine-tuning. Run it from the folder `codes/fine-tuning/`
 python infer.py   \
   --task_name binary \
   --do_lower_case \
-  --fine_tune_data_1_dir ./../../data/imdb/ \
-  --fine_tune_data_2_dir ./../../data/eec/5persen/ \
-  --eval_data_male_dir ./../../data/imdb_mutant/male/ \
-  --eval_data_female_dir ./../../data/imdb_mutant/female/ \
+  --fine_tune_data_1_dir ./../../data/imdb_small/ \
+  --fine_tune_data_2_dir ./../../data/eec/6from7/ \
+  --eval_data_male_dir ./../../data/eec/6from7/male/ \
+  --eval_data_female_dir ./../../data/eec/6from7/female/ \
   --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
   --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
   --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
@@ -85,17 +87,21 @@ python infer.py   \
   --seed 42   \
   --layers 11 10   \
   --trunc_medium -1 \
-  --output_dir ./../../result/exp1_on_imdb
+  --output_dir ./../../result/trial_on_eec/
 ```
+
+This approach will fine-tune using `--fine_tune_data_1_dir`, then fine-tune again using `--fine_tune_data_2_dir`.
+The model then predict on 2 evaluation dataset inside folders `--eval_data_male_dir` and `--eval_data_female_dir`.
+The result of prediction will be output at `--output_dir`
 
 #### Important Parameter
 
 parameter | description
 ------------ | -------------
---fine_tune_data_1_dir | First data for fine-tuning, currently IMDB
---fine_tune_data_2_dir | Second data for fine-tuning, you can left it if you only need one dataset for finetuning
---eval_data_male_dir | Evaluation for the male data
---eval_data_female_dir | Evaluation for the female data
+--fine_tune_data_1_dir | First data for fine-tuning, currently IMDB. You need to put `train.csv` inside the folder
+--fine_tune_data_2_dir | Second data for fine-tuning, you can left it if you only need one dataset for fine-tuning. You need to put `train.csv` inside the folder
+--eval_data_male_dir | Evaluation for the male data. You need to put file `test.csv` inside the folder
+--eval_data_female_dir | Evaluation for the female data. You need to put file `test.csv` inside the folder
 --output_dir | The folder to put the evaluation result for the model on male data and female data
 
 #### Another Parameter
@@ -134,11 +140,94 @@ Example of discordant pair:
 
 `<(“He is angry”, 1), (“She is angry”, 0)>`
 
+This notebook `codes/discordant-pairs.ipynb` provide the experiment on its calculation
+
 ## End-to-End Program for Fairness Test
 
+You need to provide a male test data, and a female test data then pass it to parameter `--eval_data_male_dir` and `--eval_data_male_dir` respectively when running `codes/fine-tuning/fairness_test.py`. You also need to know the `--template_size`. Template size is the number of possible generated mutant from a text. The template size for male and female must equal.
+
+The result will be saved in the `--output_dir`
+
+### Fine-tuning using IMDB Small, Test on EEC
+
+```
+python fairness_test.py   \
+  --task_name binary \
+  --do_lower_case \
+  --fine_tune_data_1_dir ./../../data/imdb_small/ \
+  --eval_data_male_dir ./../../data/eec/6from7/male/ \
+  --eval_data_female_dir ./../../data/eec/6from7/female/ \
+  --template_size 1200 \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
+  --max_seq_length 128   \
+  --train_batch_size 24   \
+  --learning_rate 2e-5   \
+  --num_train_epochs 1   \
+  --seed 42   \
+  --layers 11 10   \
+  --trunc_medium -1 \
+  --output_dir ./../../result/trial_on_eec_without_fine_tuning_eec/
+```
+
+### Fine-tuning using IMDB Small, Fine-tuning EEC, Test on EEC
+
+```
+python fairness_test.py   \
+  --task_name binary \
+  --do_lower_case \
+  --fine_tune_data_1_dir ./../../data/imdb_small/ \
+  --fine_tune_data_2_dir ./../../data/eec/6from7/ \
+  --eval_data_male_dir ./../../data/eec/6from7/male/ \
+  --eval_data_female_dir ./../../data/eec/6from7/female/ \
+  --template_size 1200 \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
+  --max_seq_length 128   \
+  --train_batch_size 24   \
+  --learning_rate 2e-5   \
+  --num_train_epochs 1   \
+  --seed 42   \
+  --layers 11 10   \
+  --trunc_medium -1 \
+  --output_dir ./../../result/trial_on_eec/
+```
+
+### Fine-tuning using IMDB Full, Test on IMDB Mutant
+
+```
+python fairness_test.py   \
+  --task_name binary \
+  --do_lower_case \
+  --fine_tune_data_1_dir ./../../data/imdb/ \
+  --eval_data_male_dir ./../../data/imdb_mutant/male/ \
+  --eval_data_female_dir ./../../data/imdb_mutant/female/ \
+  --template_size 20 \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
+  --max_seq_length 128   \
+  --train_batch_size 24   \
+  --learning_rate 2e-5   \
+  --num_train_epochs 1   \
+  --seed 42   \
+  --layers 11 10   \
+  --trunc_medium -1 \
+  --output_dir ./../../result/trial_on_imdb/
+```
+
+## Plug and Play Framework
+If you want to test using your own generated mutant text, it is easy. After the previous step is done, You only need to prepare the mutant text into our csv format. Then put it in your desired folder. Set the correct `--eval_data_male_dir` and `--eval_data_male_dir` that refer to your mutant generated folder.
+
+For example on how to prepare the csv data, please read `codes/prepare-data-for-eec.ipynb` and `codes/prepare-data-for-imdb.ipynb`.
+
+The EEC data can be downloaded from its paper. Put it into `data/eec/data.csv`. Then use the `codes/prepare-data-for-eec.ipynb` to generate test.csv train.csv. You can use the notebook to generate female.csv, male.csv  also.
 
 ## Notes
 Here the file structure to better know where to put the models and data:
+
 ```
 .
 |-- LICENSE
@@ -148,10 +237,13 @@ Here the file structure to better know where to put the models and data:
 |   |-- discordant-pairs.ipynb
 |   |-- fine-tuning
 |   |   |-- fairness_test.py
+|   |   |-- infer.py
+|   |   `-- tokenization.py
 |   |-- further-pre-training
 |   |   |-- run_pretraining.py
 |   |-- mutant-generation.ipynb
 |   |-- prepare-data-for-eec.ipynb
+|   |-- prepare-data-for-imdb.ipynb
 |   `-- prepare-masculine-feminine-word.ipynb
 |-- data
 |   |-- asset
@@ -163,21 +255,28 @@ Here the file structure to better know where to put the models and data:
 |   |   |   |   `-- test.csv
 |   |   |   |-- male
 |   |   |   |   `-- test.csv
+|   |   |   |-- test.csv
 |   |   |   `-- train.csv
-|   |   |-- 7from8
+|   |   |-- 6from7
 |   |   |   |-- female
 |   |   |   |   `-- test.csv
 |   |   |   |-- male
 |   |   |   |   `-- test.csv
 |   |   |   `-- train.csv
+|   |   |-- data.csv
+|   |   |-- test.csv
+|   |   `-- train.csv
 |   |-- imdb
 |   |   |-- test.csv
 |   |   `-- train.csv
-|   `-- imdb_mutant
-|       |-- female
-|       |   `-- test.csv
-|       |-- male
-|       |   `-- test.csv
+|   |-- imdb_mutant
+|   |   |-- female
+|   |   |   `-- test.csv
+|   |   `-- male
+|   |       `-- test.csv
+|   `-- imdb_small
+|       |-- test.csv
+|       `-- train.csv
 |-- models
 |   |-- pretrained
 |   |   `-- pytorch_model_len128_imdb.bin
@@ -188,13 +287,11 @@ Here the file structure to better know where to put the models and data:
 |       |-- bert_model.ckpt.meta
 |       `-- vocab.txt
 `-- result
-    `-- exp_on_imdb
+    `-- trial_small_imdb
+        |-- discordant-pairs.csv
         |-- eval_data_female_results.txt
         |-- eval_data_male_results.txt
+        |-- fped-fned-discordant-pairs.txt
         |-- results_data_female.txt
         `-- results_data_male.txt
-
 ```
-
-For the EEC data, you can download it from the author. Put it into `data/eec/data.csv`
-Then use the `codes/prepare-data-for-eec.ipynb` to generate test.csv train.csv. You can use the notebook to generate female.csv, male.csv  also.
