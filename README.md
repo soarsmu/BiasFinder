@@ -1,8 +1,9 @@
-# How to Fine-Tune BERT for Text Classification?
+# Fairness Bugs in Sentiment Analysis
 
-This is the code and source for the paper [How to Fine-Tune BERT for Text Classification?](https://arxiv.org/abs/1905.05583)
 
-Forked from https://github.com/xuyige/BERT4doc-Classification
+
+
+Fine-tune text classification is implemented from https://github.com/xuyige/BERT4doc-Classification
 
 I use to this code to explore on fairness testing in Sentiment Analysis Task
 
@@ -21,17 +22,18 @@ For fine-tuning, we borrow some codes from pytorch-pretrained-bert package (now 
 
 + torch>=0.4.1,<=1.2.0 -> currently I use torch 1.2.0 with cuda 10.0
 
+For nlp task
++ scikit-learn
++ nltk
++ neuralcoref
 
-## Run the code
+## Run the Experiment
 
 ### 1) Prepare the dataset and pretrained model:
 
 #### The Datasets
 
-The data sets were built by [Zhang et al. (2015)](https://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf).
-We download from [URL](https://drive.google.com/drive/u/0/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M) created by Xiang Zhang.
-
-Currently, I only use IMDB movie review dataset. The notebook `data/prepare-data.ipynb` will help you to know the the IMDB dataset into train test input for the model.
+We use IMDB movie review dataset downloaded from [URL](https://drive.google.com/drive/u/0/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M) proposed by [Zhang et al. (2015)](https://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf). The notebook `data/prepare-data.ipynb` will help you to know how to use the IMDB dataset and make it into train test input for our model.
 
 #### Pretrained Model
 
@@ -45,7 +47,7 @@ Download [BERT-Base, Uncased](https://storage.googleapis.com/bert_models/2018_10
 
 ### 3) Further Pre-Training:
 
-Currently, I use pretrained model and doesn't use it. But previously I try to run it and it works on AG news dataset. Since we use IMDB dataset, then I left the pre-training part.
+Since we use pretrained model form IMDB, this part is not a necessary. But previously I tried to run it and it worked on AG news dataset.
 
 #### Generate Further Pre-Training Corpus
 
@@ -85,10 +87,9 @@ python run_pretraining.py \
   --learning_rate=5e-5
 ```
 
-
-### 4) Fine-Tuning
-
 #### Convert Tensorflow checkpoint to PyTorch checkpoint
+
+Since we use a pretained model, we can left this part. Run this part if you do a pre-train again
 
 ```shell
 python convert_tf_checkpoint_to_pytorch.py \
@@ -96,7 +97,8 @@ python convert_tf_checkpoint_to_pytorch.py \
   --bert_config_file ./uncased_L-12_H-768_A-12_AGnews_pretrain/bert_config.json \
   --pytorch_dump_path ./uncased_L-12_H-768_A-12_AGnews_pretrain/pytorch_model.bin
 ```
-You can left this part, since we already had a pretrained model.
+
+### 4) Fine-Tuning
 
 #### Fine-Tuning on downstream tasks
 
