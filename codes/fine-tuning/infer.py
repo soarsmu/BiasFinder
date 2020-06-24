@@ -668,7 +668,6 @@ def main():
     parser.add_argument("--fine_tune_data_2_dir",
                         default=None,
                         type=str,
-                        required=True,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")    
     parser.add_argument("--eval_data_male_dir",
                         default=None,
