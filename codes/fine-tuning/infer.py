@@ -975,106 +975,66 @@ def main():
                 model.zero_grad()
                 global_step += 1
 
-#         model.eval()
-#         eval_loss, eval_accuracy = 0, 0
-#         nb_eval_steps, nb_eval_examples = 0, 0
-#         with open(os.path.join(args.output_dir, "results_before_data_1_ep"+str(epoch)+".txt"),"w") as f:
-#             for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluate"):
-#                 input_ids = input_ids.to(device)
-#                 input_mask = input_mask.to(device)
-#                 segment_ids = segment_ids.to(device)
-#                 label_ids = label_ids.to(device)
 
-#                 with torch.no_grad():
-#                     tmp_eval_loss, logits = model(input_ids, segment_ids, input_mask, label_ids)
+    if args.fine_tune_data_2_dir :
+        data_dir = args.fine_tune_data_2_dir
 
-#                 logits = logits.detach().cpu().numpy()
-#                 label_ids = label_ids.to('cpu').numpy()
-#                 outputs = np.argmax(logits, axis=1)
-#                 for output in outputs:
-#                     f.write(str(output)+"\n")
-#                 tmp_eval_accuracy=np.sum(outputs == label_ids)
+        print("Initiate Training Data 2")
+        train_examples = None
+        num_train_steps = None
+        train_examples = processor.get_train_examples(data_dir, data_num=args.num_datas)
+        num_train_steps = int(
+            len(train_examples) / args.train_batch_size * args.num_train_epochs)
 
-#                 eval_loss += tmp_eval_loss.mean().item()
-#                 eval_accuracy += tmp_eval_accuracy
+        optimizer_2 = BERTAdam(optimizer_parameters,
+                             lr=args.learning_rate,
+                             warmup=args.warmup_proportion,
+                             t_total=num_train_steps)
 
-#                 nb_eval_examples += input_ids.size(0)
-#                 nb_eval_steps += 1
+        train_features = convert_examples_to_features(
+            train_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
+        logger.info("***** Running training *****")
+        logger.info("  Num examples = %d", len(train_examples))
+        logger.info("  Batch size = %d", args.train_batch_size)
+        logger.info("  Num steps = %d", num_train_steps)
 
-#         eval_loss = eval_loss / nb_eval_steps
-#         eval_accuracy = eval_accuracy / nb_eval_examples
+        all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
+        all_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
+        all_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
+        all_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.long)
 
-#         result = {'eval_loss': eval_loss,
-#                   'eval_accuracy': eval_accuracy,
-#                   'global_step': global_step,
-#                   'loss': tr_loss/nb_tr_steps}
+        train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+        if args.local_rank == -1:
+            train_sampler = RandomSampler(train_data)
+        else:
+            train_sampler = DistributedSampler(train_data)
+        train_dataloader_2 = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
 
-#         output_eval_file = os.path.join(args.output_dir, "eval_before_data_1_results_ep"+str(epoch)+".txt")
-#         print("output_eval_file=",output_eval_file)
-#         with open(output_eval_file, "w") as writer:
-#             logger.info("***** Eval results *****")
-#             for key in sorted(result.keys()):
-#                 logger.info("  %s = %s", key, str(result[key]))
-#                 writer.write("%s = %s\n" % (key, str(result[key])))
-
-    data_dir = args.fine_tune_data_2_dir
-
-    print("Initiate Training Data 2")
-    train_examples = None
-    num_train_steps = None
-    train_examples = processor.get_train_examples(data_dir, data_num=args.num_datas)
-    num_train_steps = int(
-        len(train_examples) / args.train_batch_size * args.num_train_epochs)
-
-    optimizer_2 = BERTAdam(optimizer_parameters,
-                         lr=args.learning_rate,
-                         warmup=args.warmup_proportion,
-                         t_total=num_train_steps)
-    
-    train_features = convert_examples_to_features(
-        train_examples, label_list, args.max_seq_length, tokenizer, trunc_medium=args.trunc_medium)
-    logger.info("***** Running training *****")
-    logger.info("  Num examples = %d", len(train_examples))
-    logger.info("  Batch size = %d", args.train_batch_size)
-    logger.info("  Num steps = %d", num_train_steps)
-
-    all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.long)
-
-    train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-    if args.local_rank == -1:
-        train_sampler = RandomSampler(train_data)
-    else:
-        train_sampler = DistributedSampler(train_data)
-    train_dataloader_2 = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
-    
-    print("Train 2")
-    epoch=0
-    for _ in trange(int(args.num_train_epochs), desc="Epoch"):
-        epoch+=1
-        model.train()
-        tr_loss = 0
-        nb_tr_examples, nb_tr_steps = 0, 0
-        for step, batch in enumerate(tqdm(train_dataloader_2, desc="Iteration")):
-            batch = tuple(t.to(device) for t in batch)
-            input_ids, input_mask, segment_ids, label_ids = batch
-            loss, _ = model(input_ids, segment_ids, input_mask, label_ids)
-            if n_gpu > 1:
-                loss = loss.mean() # mean() to average on multi-gpu.
-            if args.gradient_accumulation_steps > 1:
-                loss = loss / args.gradient_accumulation_steps
-            loss.backward()
-            tr_loss += loss.item()
-            nb_tr_examples += input_ids.size(0)
-            nb_tr_steps += 1
-            if (step + 1) % args.gradient_accumulation_steps == 0:
-                optimizer_2.step()    # We have accumulated enought gradients
-           #     print("middle=",optimizer.get_lr())
-           #     print("len(middle)=",len(optimizer.get_lr()))
-                model.zero_grad()
-                global_step += 1
+        print("Train 2")
+        epoch=0
+        for _ in trange(int(args.num_train_epochs), desc="Epoch"):
+            epoch+=1
+            model.train()
+            tr_loss = 0
+            nb_tr_examples, nb_tr_steps = 0, 0
+            for step, batch in enumerate(tqdm(train_dataloader_2, desc="Iteration")):
+                batch = tuple(t.to(device) for t in batch)
+                input_ids, input_mask, segment_ids, label_ids = batch
+                loss, _ = model(input_ids, segment_ids, input_mask, label_ids)
+                if n_gpu > 1:
+                    loss = loss.mean() # mean() to average on multi-gpu.
+                if args.gradient_accumulation_steps > 1:
+                    loss = loss / args.gradient_accumulation_steps
+                loss.backward()
+                tr_loss += loss.item()
+                nb_tr_examples += input_ids.size(0)
+                nb_tr_steps += 1
+                if (step + 1) % args.gradient_accumulation_steps == 0:
+                    optimizer_2.step()    # We have accumulated enought gradients
+               #     print("middle=",optimizer.get_lr())
+               #     print("len(middle)=",len(optimizer.get_lr()))
+                    model.zero_grad()
+                    global_step += 1
                 
     
     print("Initiate Eval Data Male")

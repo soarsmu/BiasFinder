@@ -68,11 +68,11 @@ In `codes/mutant-generation.ipynb`, you need a language grammar tool check. A to
 Here the command for fine-tuning. Run it from the folder `codes/fine-tuning/`
 
 ```shell
-python fairness_test.py   \
+python infer.py   \
   --task_name binary \
   --do_lower_case \
   --fine_tune_data_1_dir ./../../data/imdb/ \
-  --fine_tune_data_2_dir ./../../data/eec/ \
+  --fine_tune_data_2_dir ./../../data/eec/5persen/ \
   --eval_data_male_dir ./../../data/imdb_mutant/male/ \
   --eval_data_female_dir ./../../data/imdb_mutant/female/ \
   --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
@@ -85,7 +85,7 @@ python fairness_test.py   \
   --seed 42   \
   --layers 11 10   \
   --trunc_medium -1 \
-  --output_dir ./../../result/imdb_eec
+  --output_dir ./../../result/exp1_on_imdb
 ```
 
 #### Important Parameter
