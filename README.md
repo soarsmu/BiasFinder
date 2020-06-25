@@ -225,6 +225,19 @@ For example on how to prepare the csv data, please read `codes/prepare-data-for-
 
 The EEC data can be downloaded from its paper. Put it into `data/eec/data.csv`. Then use the `codes/prepare-data-for-eec.ipynb` to generate test.csv train.csv. You can use the notebook to generate female.csv, male.csv  also.
 
+## Important Resources
+#### Dataset, Model and Result of the Experiment
+This [link](https://drive.google.com/drive/folders/1rnilNLUXjVhtBuZNz4XKNox-WUuJUFP1?usp=sharing) contain a resource to our dataset, model, and experiment result.
+
+#### Technical Report
+The technical report will explain what is happen in the each sprint.
+* [Technical Report Sprint 1](https://drive.google.com/file/d/1NNqyCDb2wNf-UmBhjhd-GnNKXyppmHwp/view?usp=sharing)
+* Technical Report Sprint 2
+* Technical Report Sprint 3
+* Technical Report Sprint 4
+* Technical Report Sprint 5
+
+
 ## Notes
 Here the file structure to better know where to put the models and data:
 
