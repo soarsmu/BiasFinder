@@ -9,7 +9,7 @@ Fine-tuning text classification is inspired from https://github.com/xuyige/BERT4
 
 For further pre-training, we borrow some code from Google BERT. Thus, we need:
 
-+ tensorflow==1.1x -> currently I use tensorflow-gpu==1.14
++ tensorflow==1.1x -> currently tensorflow-gpu==1.14 is used
 + spacy
 + pandas
 + numpy
@@ -17,7 +17,7 @@ For further pre-training, we borrow some code from Google BERT. Thus, we need:
 
 For fine-tuning, we borrow some codes from pytorch-pretrained-bert package (now well known as transformers). Thus, we need:
 
-+ torch>=0.4.1,<=1.2.0 -> currently I use torch 1.2.0 with cuda 10.0
++ torch>=0.4.1,<=1.2.0 -> currently torch 1.2.0 with cuda 10.0 is used
 
 For nlp task
 + scikit-learn
@@ -28,7 +28,7 @@ For nlp task
 
 ## Setup and Trial for the Experiment
 
-This part will tell you the preparation needed. If you don't find any error in this step. You can go to the end-to-end program.
+This part will tell you the preparation needed. If you don't find any error in this step. You can go to the [end-to-end program](#end-to-end-program). Then read the [Important Resource](#important-resource) and [Technical Report](#technical-report)
 
 ### 1) Prepare the dataset and pretrained model:
 
@@ -92,7 +92,7 @@ python infer.py   \
 
 This approach will fine-tune using `--fine_tune_data_1_dir`, then fine-tune again using `--fine_tune_data_2_dir`.
 The model then predict on 2 evaluation dataset inside folders `--eval_data_male_dir` and `--eval_data_female_dir`.
-The result of prediction will be output at `--output_dir`
+The result of prediction will be output at `--output_dir`. If the `--output_dir` is already exist, you must delete the folder first.
 
 #### Important Parameter
 
@@ -129,7 +129,7 @@ indicates layer-wise decreasing layer rate (See Section 5.3.4).
 ### 5) Calculate the FPED, FNED
 
 The theory comes from the [AAA 2018 paper](https://www.aies-conference.com/2018/contents/papers/main/AIES_2018_paper_9.pdf).
-I implement it on `codes/FNED-FPED.ipynb`. Please make sure you have run the fine tuning to get several evalution file needed. And make sure that you put the dataset in the right folder. Match the `output_dir` parameter in the fine-tuning with `output_dir` variable in the notebook.
+The `codes/FNED-FPED.ipynb` contain the implementation for it. Please make sure that you have run the fine tuning to get several evalution file needed. Make sure that you put the dataset in the right folder. Match the `output_dir` parameter in the fine-tuning with `output_dir` variable in the notebook.
 
 ### 6) Calculate the Number of Discordant Pairs
 
@@ -142,13 +142,13 @@ Example of discordant pair:
 
 This notebook `codes/discordant-pairs.ipynb` provide the experiment on its calculation
 
-## End-to-End Program for Fairness Test
+## End-to-End Program
 
 You need to provide a male test data, and a female test data then pass it to parameter `--eval_data_male_dir` and `--eval_data_male_dir` respectively when running `codes/fine-tuning/fairness_test.py`. You also need to know the `--template_size`. Template size is the number of possible generated mutant from a text. The template size for male and female must equal.
 
-The result will be saved in the `--output_dir`
+The result will be saved in the `--output_dir`.
 
-### Fine-tuning using IMDB Small, Test on EEC
+#### Fine-tuning using IMDB Small, Test on EEC
 
 ```
 python fairness_test.py   \
@@ -171,7 +171,7 @@ python fairness_test.py   \
   --output_dir ./../../result/trial_on_eec_without_fine_tuning_eec/
 ```
 
-### Fine-tuning using IMDB Small, Fine-tuning EEC, Test on EEC
+#### Fine-tuning using IMDB Small, Fine-tuning EEC, Test on EEC
 
 ```
 python fairness_test.py   \
@@ -195,7 +195,7 @@ python fairness_test.py   \
   --output_dir ./../../result/trial_on_eec/
 ```
 
-### Fine-tuning using IMDB Full, Test on IMDB Mutant
+#### Fine-tuning using IMDB Full, Test on IMDB Mutant
 
 ```
 python fairness_test.py   \
@@ -225,12 +225,12 @@ For example on how to prepare the csv data, please read `codes/prepare-data-for-
 
 The EEC data can be downloaded from its paper. Put it into `data/eec/data.csv`. Then use the `codes/prepare-data-for-eec.ipynb` to generate test.csv train.csv. You can use the notebook to generate female.csv, male.csv  also.
 
-## Important Resources
+## Important Resource
 #### Dataset, Model and Result of the Experiment
 This [link](https://drive.google.com/drive/folders/1rnilNLUXjVhtBuZNz4XKNox-WUuJUFP1?usp=sharing) contain a resource to our dataset, model, and experiment result.
 
 #### Technical Report
-The technical report will explain what is happen in the each sprint.
+The technical report will explain what is happen in each sprint.
 * [Technical Report Sprint 1](https://drive.google.com/file/d/1NNqyCDb2wNf-UmBhjhd-GnNKXyppmHwp/view?usp=sharing)
 * Technical Report Sprint 2
 * Technical Report Sprint 3
