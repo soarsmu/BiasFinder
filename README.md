@@ -238,6 +238,40 @@ The technical report will explain what is happen in each sprint.
 * [Technical Report Sprint 6](https://drive.google.com/file/d/1djRLaplAGsN9qw2cSI2dlIX5Kg4HlFaL/view?usp=sharing)
 
 
+## Country-of-origin Bias Experiment
+#### Data Preparation
+`codes/prepare-data-from-gender-computer.ipynb` -> prepare data from [GenderComputer](https://github.com/tue-mdse/genderComputer/tree/master/nameLists)
+
+`codes/mutant-generation-using-EEC-template.ipynb` -> mutant generation by substituing name from GenderComputer into EEC template
+
+#### Infer the prediction using Generated Mutant
+```shell
+python infer.py   \
+  --task_name binary \
+  --do_lower_case \
+  --fine_tune_data_1_dir ./../../data/imdb/ \
+  --eval_data_dir ./../../data/gc_mutant/ \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
+  --max_seq_length 128   \
+  --train_batch_size 24   \
+  --learning_rate 2e-5   \
+  --num_train_epochs 1   \
+  --seed 42   \
+  --layers 11 10   \
+  --trunc_medium -1 \
+  --output_dir ./../../result/gc_mutant/
+```
+
+#### Calculate FPED and FNED
+`codes/FNED-FPED-Country.ipynb` -> FNED and FPED calculation for country. But it's easily adopted to use calculation for others, such as gender and occupation.
+
+
+#### Calculate Number of Discordant Pairs
+`codes/discordant-pairs-Country.ipynb` -> Discordant pairs calculation for country. But it's easily adopted to use calculation for others, such as gender and occupation.
+
+
 ## Notes
 Here the file structure to better know where to put the models and data:
 
