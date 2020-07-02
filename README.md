@@ -75,8 +75,7 @@ python infer.py   \
   --do_lower_case \
   --fine_tune_data_1_dir ./../../data/imdb_small/ \
   --fine_tune_data_2_dir ./../../data/eec/6from7/ \
-  --eval_data_male_dir ./../../data/eec/6from7/male/ \
-  --eval_data_female_dir ./../../data/eec/6from7/female/ \
+  --eval_data_dir ./../../data/eec/6from7/male/ \
   --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
   --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
   --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
@@ -87,11 +86,11 @@ python infer.py   \
   --seed 42   \
   --layers 11 10   \
   --trunc_medium -1 \
-  --output_dir ./../../result/trial_on_eec/
+  --output_dir ./../../result/trial_on_eec_male/
 ```
 
-This approach will fine-tune using `--fine_tune_data_1_dir`, then fine-tune again using `--fine_tune_data_2_dir`.
-The model then predict on 2 evaluation dataset inside folders `--eval_data_male_dir` and `--eval_data_female_dir`.
+This approach will fine-tune using `--fine_tune_data_1_dir`, then fine-tune again using `--fine_tune_data_2_dir`. `--fine_tune_data_1_dir` is a required parameter and `--fine_tune_data_2_dir` only an optional parameter.
+The model then predict evaluation dataset inside folders `--eval_data_dir`.
 The result of prediction will be output at `--output_dir`. If the `--output_dir` is already exist, you must delete the folder first.
 
 #### Important Parameter
