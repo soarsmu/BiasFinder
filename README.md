@@ -150,8 +150,8 @@ The result will be saved in the `--output_dir`.
 
 #### Fine-tuning using IMDB Small, Test on EEC
 
-```
-python fairness_test.py   \
+```shell
+python fairness_test_gender.py   \
   --task_name binary \
   --do_lower_case \
   --fine_tune_data_1_dir ./../../data/imdb_small/ \
@@ -173,8 +173,8 @@ python fairness_test.py   \
 
 #### Fine-tuning using IMDB Small, Fine-tuning EEC, Test on EEC
 
-```
-python fairness_test.py   \
+```shell
+python fairness_test_gender.py   \
   --task_name binary \
   --do_lower_case \
   --fine_tune_data_1_dir ./../../data/imdb_small/ \
@@ -197,8 +197,8 @@ python fairness_test.py   \
 
 #### Fine-tuning using IMDB Full, Test on IMDB Mutant
 
-```
-python fairness_test.py   \
+```shell
+python fairness_test_gender.py   \
   --task_name binary \
   --do_lower_case \
   --fine_tune_data_1_dir ./../../data/imdb/ \
