@@ -236,6 +236,7 @@ The technical report will explain what is happen in each sprint.
 * Technical Report Sprint 3
 * Technical Report Sprint 4
 * Technical Report Sprint 5
+* [Technical Report Sprint 6](https://drive.google.com/file/d/1djRLaplAGsN9qw2cSI2dlIX5Kg4HlFaL/view?usp=sharing)
 
 
 ## Notes
