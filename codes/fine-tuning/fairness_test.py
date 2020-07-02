@@ -1068,6 +1068,8 @@ def main():
     eval_loss = eval_loss / nb_eval_steps
     eval_accuracy = eval_accuracy / nb_eval_examples
 
+    male_accuracy = eval_accuracy
+  
     result = {'eval_loss': eval_loss,
               'eval_accuracy': eval_accuracy}
 
@@ -1124,6 +1126,8 @@ def main():
     eval_loss = eval_loss / nb_eval_steps
     eval_accuracy = eval_accuracy / nb_eval_examples
 
+    female_accuracy = eval_accuracy
+    
     result = {'eval_loss': eval_loss,
               'eval_accuracy': eval_accuracy}
 
@@ -1144,91 +1148,98 @@ def main():
         file.close()
         return pred
 
-    dfm = pd.read_csv(os.path.join(args.eval_data_male_dir, "test.csv"), header=None, sep="\t", names=["label", "text", "template"])
-    dff = pd.read_csv(os.path.join(args.eval_data_female_dir, "test.csv"), header=None, sep="\t", names=["label", "text", "template"])
-
-    rm = os.path.join(args.output_dir + "results_data_male.txt")
-    rf = os.path.join(args.output_dir + "results_data_female.txt")
-    
-    mpred = read_txt(rm)
-    fpred = read_txt(rf)
-
-    dfm["pred"] = mpred
-    dff["pred"] = fpred
-
-    df = pd.concat([dfm, dff])
-
-    # calculate false positive rate from given consufsion matrix
-    def calculate_fpr(cm):
-        negative = np.sum(cm[0])
-        fp = cm[0][1]
-        fpr = fp / negative
-        return fpr
-
-    # calculate false positive rate from given consufsion matrix
-    def calculate_fnr(cm):
-        negative = np.sum(cm[0])
-        fn = cm[1][0]
-        fnr = fn / negative
-        return fnr
-
-    y_test = df["label"]
-    y_pred = df["pred"]
-    cm = confusion_matrix(y_test, y_pred)
-    global_fpr = calculate_fpr(cm)
-    global_fnr = calculate_fnr(cm)
-
-    d = [dfm, dff]
     fped = 0
     fned = 0
-    for _d in d:
-        y_test = _d["label"]
-        y_pred = _d["pred"]
+    dp = 0
+    
+    if male_accuracy != 1 or female_accuracy != 1:
+
+        dfm = pd.read_csv(os.path.join(args.eval_data_male_dir, "test.csv"), header=None, sep="\t", names=["label", "text", "template"])
+        dff = pd.read_csv(os.path.join(args.eval_data_female_dir, "test.csv"), header=None, sep="\t", names=["label", "text", "template"])
+
+        rm = os.path.join(args.output_dir + "results_data_male.txt")
+        rf = os.path.join(args.output_dir + "results_data_female.txt")
+
+        mpred = read_txt(rm)
+        fpred = read_txt(rf)
+
+        dfm["pred"] = mpred
+        dff["pred"] = fpred
+
+        df = pd.concat([dfm, dff])
+
+        # calculate false positive rate from given consufsion matrix
+        def calculate_fpr(cm):
+            negative = np.sum(cm[0])
+            fp = cm[0][1]
+            fpr = fp / negative
+            return fpr
+
+        # calculate false negative rate from given consufsion matrix
+        def calculate_fnr(cm):
+            negative = np.sum(cm[0])
+            fn = cm[1][0]
+            fnr = fn / negative
+            return fnr
+
+        y_test = df["label"]
+        y_pred = df["pred"]
         cm = confusion_matrix(y_test, y_pred)
-        fpr = calculate_fpr(cm)
-        fnr = calculate_fnr(cm)
-        fped += abs(global_fpr - fpr)
-        fned += abs(global_fnr - fnr)
-        
+        global_fpr = calculate_fpr(cm)
+        global_fnr = calculate_fnr(cm)
+
+        d = [dfm, dff]
+        fped = 0
+        fned = 0
+        for _d in d:
+            y_test = _d["label"]
+            y_pred = _d["pred"]
+            cm = confusion_matrix(y_test, y_pred)
+            fpr = calculate_fpr(cm)
+            fnr = calculate_fnr(cm)
+            fped += abs(global_fpr - fpr)
+            fned += abs(global_fnr - fnr)
+
+        mtext = dfm["text"]
+        mpred = dfm["pred"]
+        ftext = dff["text"]
+        fpred = dff["pred"]
+
+        # number of mutant for each template, 1200 for EEC, 20 for imdb_mutant
+        template_size = args.template_size
+
+        male_text = []
+        female_text = []
+        male_prediction = []
+        female_prediction = []
+        lb = 0
+
+        while lb < len(mtext) :
+            ub = lb + template_size
+            mt = mtext[lb:ub]
+            mp = mpred[lb:ub]
+            ft = ftext[lb:ub]
+            fp = fpred[lb:ub]
+            for _mt, _mp in zip(mt, mp):
+                for _ft, _fp in zip(ft, fp):
+                    male_text.append(_mt)
+                    male_prediction.append(_mp)
+                    female_text.append(_ft)
+                    female_prediction.append(_fp)
+            lb = ub
+
+        df = pd.DataFrame(data={"male_text" : male_text, "female_text" : female_text, "male_prediction": male_prediction, "female_prediction" : female_prediction})
+        df["discordant"] = df["male_prediction"] != df["female_prediction"]
+        dfd = df[df["discordant"] == True]
+        dp = len(dfd)
+    
+        dfd.to_csv(os.path.join(args.output_dir, "discordant-pairs.csv"), index=False)
+    
     print()
     print("FPED: ", fped)
     print("FNED: ", fned)
-    
-    mtext = dfm["text"]
-    mpred = dfm["pred"]
-    ftext = dff["text"]
-    fpred = dff["pred"]
-    
-    # number of mutant for each template, 1200 for EEC, 20 for imdb_mutant
-    template_size = args.template_size
-    
-    male_text = []
-    female_text = []
-    male_prediction = []
-    female_prediction = []
-    lb = 0
-    
-    while lb < len(mtext) :
-        ub = lb + template_size
-        mt = mtext[lb:ub]
-        mp = mpred[lb:ub]
-        ft = ftext[lb:ub]
-        fp = fpred[lb:ub]
-        for _mt, _mp in zip(mt, mp):
-            for _ft, _fp in zip(ft, fp):
-                male_text.append(_mt)
-                male_prediction.append(_mp)
-                female_text.append(_ft)
-                female_prediction.append(_fp)
-        lb = ub
-        
-    df = pd.DataFrame(data={"male_text" : male_text, "female_text" : female_text, "male_prediction": male_prediction, "female_prediction" : female_prediction})
-    df["discordant"] = df["male_prediction"] != df["female_prediction"]
-    dfd = df[df["discordant"] == True]
-    dp = len(dfd)
     print("Number of Discordant Pairs: ", dp)
     
-    dfd.to_csv(os.path.join(args.output_dir, "discordant-pairs.csv"), index=False)
     with open(os.path.join(args.output_dir, "fped-fned-discordant-pairs.txt"),"w") as f:
         f.write("FPED: " + str(fped) + "\n")
         f.write("FNED: " + str(fned) + "\n")
