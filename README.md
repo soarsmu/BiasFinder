@@ -242,7 +242,7 @@ The technical report will explain what is happen in each sprint.
 #### Data Preparation
 `codes/prepare-data-from-gender-computer.ipynb` -> prepare data from [GenderComputer](https://github.com/tue-mdse/genderComputer/tree/master/nameLists)
 
-`codes/mutant-generation-using-EEC-template.ipynb` -> mutant generation by substituing name from GenderComputer into EEC template
+`codes/mutant-generation-using-EEC-template.ipynb` -> mutant generation by substituting name from GenderComputer into EEC template
 
 #### Infer the prediction using Generated Mutant
 ```shell
