@@ -24,9 +24,11 @@ feminineToMasculine = {}
 # gender associated word
 gaw = pd.read_csv("../data/gender_associated_word/masculine-feminine-person.txt")
 
+
 for _m, _f in zip(masculine_pronoun, feminine_pronoun) :
     masculineToFeminine[_m] = _f
     feminineToMasculine[_f] = _m
+    
 
 class MutantGeneration:
     original = ""
@@ -164,7 +166,6 @@ class MutantGeneration:
         return False
         
     def isThePersonNameSubstringOfTheMainReference(self) :
-        
         return self.isContainAPersonNameAndItIsTheRoot(self.person_reference.getMainReference())
     
     def isTheRootOfTheTextAGenderAssociatedWord(self, text):
