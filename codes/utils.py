@@ -1,8 +1,10 @@
 from string import punctuation
 from string import digits
 
-import en_core_web_lg
 import neuralcoref
+# import en_core_web_sm
+# nlp = en_core_web_sm.load()
+import en_core_web_lg
 nlp = en_core_web_lg.load()
 coref = neuralcoref.NeuralCoref(nlp.vocab)
 nlp.add_pipe(coref, name='neuralcoref')
@@ -67,6 +69,6 @@ def restructureText(text):
 
 def preprocessText(text):
     text = removeHtmlTags(text)
-    text = removeBlackslash(text)
+    text = removeBackslash(text)
     text = restructureText(text)
     return text
