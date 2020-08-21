@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 
 from Entity import Entity
@@ -15,9 +16,14 @@ feminine_pronoun = ["she", "her", "her", "herself", "She","Her", "Her", "Herself
 masculineToFeminine = {}
 feminineToMasculine = {}
 
+NAME = "name"
+PRONOUN = "pro"
+SALUTATION = "sltn"
+GAW = "gaw"
+
 for _m, _f in zip(masculine_pronoun, feminine_pronoun) :
-    masculineToFeminine[_m] = _f
-    feminineToMasculine[_f] = _m
+    masculineToFeminine["<" + PRONOUN + "-" + _m + ">"] = _f
+    feminineToMasculine["<" + PRONOUN + "-" + _f + ">"] = _m
 
 # gender associated word
 gaw = pd.read_csv("../data/gender_associated_word/masculine-feminine-person.txt")
@@ -29,8 +35,17 @@ female_salutation = ["Ms", "Ms.", "Mrs.", "Miss", "Madam"]
 maleToFemaleSalutation = {}
 femaleToMaleSalutation = {}
 for _m, _f in zip(male_salutation, female_salutation) :
+#     maleToFemaleSalutation["<" + SALUTATION + "-" + _m + ">"] = _f
+#     femaleToMaleSalutation["<" + SALUTATION + "-" + _f + ">"] = _m
     maleToFemaleSalutation[_m] = _f
     femaleToMaleSalutation[_f] = _m
+
+# mnames = ["Alonzo", "Adam", "Alphonse", "Alan", "Darnell", "Andrew", "Jamel", "Frank", "Jerome", "Harry", "Lamar", "Jack", "Leroy", "Josh", "Malik", "Justin", "Terrence", "Roger", "Torrance", "Ryan"]
+# fnames = ["Ebony", "Amanda", "Jasmine", "Betsy", "Lakisha", "Courtney", "Latisha", "Ellen", "Latoya", "Heather", "Nichelle", "Katie", "Shaniqua", "Kristin", "Shereen", "Melanie", "Tanisha", "Nancy", "Tia", "Stephanie"]
+
+# small name for debugging
+mnames = ["Alonzo", "Adam"] 
+fnames = ["Ebony", "Amanda"]
     
 
 class MutantGeneration:
@@ -180,7 +195,7 @@ class MutantGeneration:
         placeholder = []
         for token in doc:
             if token.text in salutation :
-                placeholder.append("<sltn-" + token.text + ">")
+                placeholder.append("<" + SALUTATION + "-" + token.text + ">")
             elif token.text in self.person_entities :
                 if token.dep_ == "ROOT":
                     placeholder.append("<name>")
@@ -211,7 +226,7 @@ class MutantGeneration:
                     if main_token in gaw["feminine"].values :
                         check = True
                 if check :
-                    placeholder.append("<gaw>")
+                    placeholder.append("<" + GAW + ">")
             else :
                 placeholder.append(token.text)
         
@@ -230,12 +245,15 @@ class MutantGeneration:
     def isTheReferencesContainNonPronoun(self) :
         for word in self.person_reference.getReferences() :
             if self.isAPersonName(word):
-                self.main_placeholder = "<name>"
+                self.main_placeholder = "<" + NAME + ">"
+                self.main_placeholder_type = NAME
                 return True
             if self.isContainAPersonNameAndItIsTheRoot(word) :
                 self.main_placeholder = self.markGenderSalutationWord(word)
+                self.main_placeholder_type = SALUTATION
                 return True
             if self.isTheRootOfTheTextAGenderAssociatedWord(word) :
+                self.main_placeholder_type = GAW
                 return True
         return False
     
@@ -244,22 +262,27 @@ class MutantGeneration:
     def generateTemplate(self) :
         
         main_placeholder = None
+        main_placeholder_type = None
         
         if self.isHavingOnePersonReference() :
             if self.isTheMainReferenceAPersonName() :
                 print("The Main Reference is a Person Name")
-                main_placeholder = "<name>"
+                main_placeholder = "<" + NAME + ">"
+                main_placeholder_type = NAME
             elif self.isThePersonNameSubstringOfTheMainReference() :
                 print("Person Name Substring of The Main Reference")
                 main_placeholder = self.markGenderSalutationWord(self.person_reference.getMainReference())
+                main_placeholder_type = SALUTATION
             elif self.isTheMainReferenceAGenderAssociatedWord() :
                 print("The Main Reference is a Gender Associated Word")
                 main_placeholder = self.main_placeholder
+                main_placeholder_type = GAW
             elif self.isTheMainReferenceAPersonPronoun() :
                 print("The Main Reference is a Person Pronoun")
                 if self.isTheReferencesContainNonPronoun() :
                     print("The References Contain Non Prononun")
                     main_placeholder = self.main_placeholder
+                    main_placeholder_type = self.main_placeholder_type
                 else :
                     print("The References is Not Replaceable")
                     
@@ -270,13 +293,65 @@ class MutantGeneration:
             if self.is_male :
                 for r in self.person_reference.getTokenReferences() :
                     if r.word in masculine_pronoun :
-                        t.append("<pro-" + r.word + ">")
+                        t.append("<" + PRONOUN + "-" + r.word + ">")
                     else :
                         t.append(main_placeholder)
 
                     t.append(self.chunks[i])
                     i += 1
 
-            self.template = " ".join(t).strip()
+            template = " ".join(t).strip()
+            self.template = re.sub(' +', ' ', template)
+            self.main_placeholder_type = main_placeholder_type
             print(self.template)
+
+    def generateMaleMutantUsingMaleNames(self, template, names) :
+        mutants = [] 
+        for name in names :
+            _template = template.replace("<" + NAME + ">", name)
+            mutants.append(_template)
+        return mutants
+    
+    def generateMaleMutantUsingMaleNamesAndSalutation(self, template, names) :
+        if self.is_male :
+            for m in male_salutation:
+                template = template.replace("<" + SALUTATION + "-" + m + ">", m)
+        else :
+            for f in female_salutation:
+                template = template.replace("<" + SALUTATION + "-" + f + ">", femaleToMaleSalutation[f])
+        return self.generateMaleMutantUsingMaleNames(template, names)
+    
+    def generateMaleMutantTemplateUsingGenderAssociatedWords(self, template, gaw) :
+        mutants = []
+        for m in gaw["masculine"] :
+            mutants.append(template.replace("<" + GAW + ">", m))
+        return mutants
+    
+    def replacePronounTemplateIntoMalePronoun(self, template) :
+        if self.is_male :
+            for token in masculine_pronoun :
+                template = template.replace("<" + PRONOUN + "-" + token + ">", token)
+            return template
+        else :
+            for token in feminine_pronoun :
+                template = template.replace("<" + PRONOUN + "-" + token + ">", feminineToMasculine[token])
+            return template
+
+    
+    def generateMaleMutant(self) :
+        mutants = []
+        template = self.replacePronounTemplateIntoMalePronoun(self.template)
+        if self.main_placeholder_type == NAME :
+            mutants = self.generateMaleMutantUsingMaleNames(template, mnames)
+        elif self.main_placeholder_type == SALUTATION :
+            mutants = self.generateMaleMutantUsingMaleNamesAndSalutation(template, mnames)
+        elif self.main_placeholder_type == GAW :
+            mutants = self.generateMaleMutantTemplateUsingGenderAssociatedWords(template, gaw)
+                
+        return mutants
+        
+                    
+            
+        
+        
         
