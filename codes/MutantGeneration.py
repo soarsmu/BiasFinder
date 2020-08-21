@@ -45,9 +45,24 @@ for _m, _f in zip(male_salutation, female_salutation) :
 # mnames = ["Alonzo", "Adam", "Alphonse", "Alan", "Darnell", "Andrew", "Jamel", "Frank", "Jerome", "Harry", "Lamar", "Jack", "Leroy", "Josh", "Malik", "Justin", "Terrence", "Roger", "Torrance", "Ryan"]
 # fnames = ["Ebony", "Amanda", "Jasmine", "Betsy", "Lakisha", "Courtney", "Latisha", "Ellen", "Latoya", "Heather", "Nichelle", "Katie", "Shaniqua", "Kristin", "Shereen", "Melanie", "Tanisha", "Nancy", "Tia", "Stephanie"]
 
+# load name from gender computer
+gc = pd.read_csv("../data/gc_name/data.csv")
+gcm = gc[gc["Gender"] == "male"]
+gcf = gc[gc["Gender"] == "female"]
+# names from GC
+# gcm = gcm[:2]
+# gcf = gcf[:2]
+mnames = gcm["Name"].tolist()
+mcountries = gcm["Country"].tolist()
+fnames = gcf["Name"].tolist()
+fcountries = gcf["Country"].tolist()
+
+countries = mcountries.copy()
+countries.extend(fcountries)
+
 # small name for debugging
-mnames = ["Alonzo", "Adam"] 
-fnames = ["Ebony", "Amanda"]
+# mnames = ["Alonzo", "Adam"] 
+# fnames = ["Ebony", "Amanda"]
     
 
 class MutantGeneration:
@@ -61,6 +76,7 @@ class MutantGeneration:
     person_reference = None
     person_name = None
     main_placeholder = None
+    template = None
     
     def __init__(self, text):
         
@@ -73,6 +89,7 @@ class MutantGeneration:
 
         self.coreferences = []
         
+        
         for r in doc._.coref_clusters :
             self.coreferences.append(Coreference(r.main, r.mentions))
         
@@ -80,8 +97,8 @@ class MutantGeneration:
         
         if self.is_having_one_person_reference :
             self.chunks = self.generateChunkFromCoreference()
+            self.generateTemplate()
         
-            
     def getOriginal(self):
         return self.original
     
@@ -124,7 +141,7 @@ class MutantGeneration:
         if s == 1 :
             # check if it's only prononun there
             is_only_pronoun = True
-            print(person_reference.getReferences())
+#             print(person_reference.getReferences())
             for r in person_reference.getReferences() :
                 if r not in masculine_pronoun and r not in feminine_pronoun :
                     is_only_pronoun = False
@@ -267,45 +284,51 @@ class MutantGeneration:
         main_placeholder_type = None
         
         if self.isHavingOnePersonReference() :
+            is_replacable = False
             if self.isTheMainReferenceAPersonName() :
-                print("The Main Reference is a Person Name")
+#                 print("The Main Reference is a Person Name")
                 main_placeholder = "<" + NAME + ">"
                 main_placeholder_type = NAME
+                is_replacable = True
             elif self.isThePersonNameSubstringOfTheMainReference() :
-                print("Person Name Substring of The Main Reference")
+#                 print("Person Name Substring of The Main Reference")
                 main_placeholder = self.markGenderSalutationWord(self.person_reference.getMainReference())
                 main_placeholder_type = SALUTATION
+                is_replacable = True
             elif self.isTheMainReferenceAGenderAssociatedWord() :
-                print("The Main Reference is a Gender Associated Word")
+#                 print("The Main Reference is a Gender Associated Word")
                 main_placeholder = self.main_placeholder
                 main_placeholder_type = GAW
+                is_replacable = True
             elif self.isTheMainReferenceAPersonPronoun() :
-                print("The Main Reference is a Person Pronoun")
+#                 print("The Main Reference is a Person Pronoun")
                 if self.isTheReferencesContainNonPronoun() :
-                    print("The References Contain Non Prononun")
+#                     print("The References Contain Non Prononun")
                     main_placeholder = self.main_placeholder
                     main_placeholder_type = self.main_placeholder_type
-                else :
-                    print("The References is Not Replaceable")
+                    is_replaceable = True
+#                 else :
+#                     print("The References is Not Replaceable")
                             
-            t = [self.chunks[0]]
-            i = 1
-            if self.is_male :
-                for r in self.person_reference.getTokenReferences() :
-                    if r.word in masculine_pronoun :
-                        t.append("<" + PRONOUN + "-" + r.word + ">")
-                    else :
-                        t.append(main_placeholder)
+            if is_replacable :
+                t = [self.chunks[0]]
+                i = 1
+                if self.is_male :
+                    for r in self.person_reference.getTokenReferences() :
+                        if r.word in masculine_pronoun :
+                            t.append("<" + PRONOUN + "-" + r.word + ">")
+                        else :
+                            t.append(main_placeholder)
 
-                    t.append(self.chunks[i])
-                    i += 1
+                        t.append(self.chunks[i])
+                        i += 1
 
-            template = " ".join(t).strip()
-            self.template = re.sub(' +', ' ', template)
-            self.main_placeholder_type = main_placeholder_type
+                template = " ".join(t).strip()
+                self.template = re.sub(' +', ' ', template)
+                self.main_placeholder_type = main_placeholder_type
             
-            print(main_placeholder)
-            print(self.template)
+#                 print(main_placeholder)
+#                 print(self.template)
 
             
     def replacePronounTemplateIntoMalePronoun(self, template) :
@@ -409,22 +432,27 @@ class MutantGeneration:
         return mutants, identifiers, types
     
     def generateMutant(self) :
-        male_mutants, male_identifiers, male_types = self.generateMaleMutant()
-        female_mutants, female_identifiers, female_types = self.generateFemaleMutant()
+        if self.template :
+
+            male_mutants, male_identifiers, male_types = self.generateMaleMutant()
+            female_mutants, female_identifiers, female_types = self.generateFemaleMutant()
+
+            genders = ["male"] * len(male_mutants)
+            genders.extend(["female"] * len(female_mutants))
+
+            male_mutants.extend(female_mutants)
+            male_identifiers.extend(female_identifiers)
+            male_types.extend(female_types)
+
+            countries = []
+
+            if self.main_placeholder_type == NAME or self.main_placeholder_type == SALUTATION :
+                countries = mcountries.copy()
+                countries.extend(fcountries)
+            elif self.main_placeholder_type == GAW :
+                countries = [None] * len(male_types)
+
+
+            return male_mutants, [self.template] * len(male_mutants), male_identifiers, male_types, genders, countries
         
-        male_mutants.extend(female_mutants)
-        male_identifiers.extend(female_identifiers)
-        male_types.extend(female_types)
-        
-        return male_mutants, male_identifiers, male_types
-        
-        
-        
-    
-    
-        
-                    
-            
-        
-        
-        
+        return [], [], [], [], [], []
