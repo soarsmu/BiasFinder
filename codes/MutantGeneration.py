@@ -344,15 +344,23 @@ class MutantGeneration:
     
     def generateMaleMutant(self) :
         mutants = []
+        identifiers = []
+        types = []
         template = self.replacePronounTemplateIntoMalePronoun(self.template)
         if self.main_placeholder_type == NAME :
             mutants = self.generateMutantUsingName(template, mnames)
+            identifiers = mnames.copy() 
+            types = [NAME] * len(mnames)
         elif self.main_placeholder_type == SALUTATION :
             mutants = self.generateMaleMutantUsingNameAndSalutation(template, mnames)
+            identifiers = mnames.copy()
+            types = [SALUTATION] * len(mnames)
         elif self.main_placeholder_type == GAW :
             mutants = self.generateMaleMutantUsingGenderAssociatedWord(template, gaw)
+            identifiers = gaw["masculine"].tolist()
+            types = [GAW] * len(gaw["masculine"])
                 
-        return mutants
+        return mutants, identifiers, types
     
 
     def replacePronounTemplateIntoFemalePronoun(self, template) :
@@ -382,15 +390,36 @@ class MutantGeneration:
 
     def generateFemaleMutant(self) :
         mutants = []
+        identifiers = []
+        types = []
         template = self.replacePronounTemplateIntoFemalePronoun(self.template)
         if self.main_placeholder_type == NAME :
             mutants = self.generateMutantUsingName(template, fnames)
+            identifiers = fnames.copy() 
+            types = [NAME] * len(fnames)
         elif self.main_placeholder_type == SALUTATION :
             mutants = self.generateFemaleMutantUsingNameAndSalutation(template, fnames)
+            identifiers = fnames.copy() 
+            types = [SALUTATION] * len(fnames)
         elif self.main_placeholder_type == GAW :
             mutants = self.generateFemaleMutantUsingGenderAssociatedWord(template, gaw)
-                
-        return mutants
+            identifiers = gaw["feminine"].tolist()
+            types = [GAW] * len(gaw["feminine"])
+            
+        return mutants, identifiers, types
+    
+    def generateMutant(self) :
+        male_mutants, male_identifiers, male_types = self.generateMaleMutant()
+        female_mutants, female_identifiers, female_types = self.generateFemaleMutant()
+        
+        male_mutants.extend(female_mutants)
+        male_identifiers.extend(female_identifiers)
+        male_types.extend(female_types)
+        
+        return male_mutants, male_identifiers, male_types
+        
+        
+        
     
     
         
