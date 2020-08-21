@@ -5,29 +5,32 @@ from CustomToken import CustomToken as Token
 from Coreference import Coreference
 from utils import nlp
 
-# import en_core_web_lg
-# import neuralcoref
-# nlp = en_core_web_lg.load()
-# coref = neuralcoref.NeuralCoref(nlp.vocab)
-# nlp.add_pipe(coref, name='neuralcoref')
-
 # masculine pronoun
 masculine_pronoun = ["he", "him", "his", "himself", "He", "Him", "His", "Himself"]
 
 # feminine prononun
-feminine_pronoun = ["she","her", "her", "herself", "She","Her", "Her", "Herself"]
+feminine_pronoun = ["she", "her", "her", "herself", "She","Her", "Her", "Herself"]
 
 # gender flipper
 masculineToFeminine = {}
 feminineToMasculine = {}
 
-# gender associated word
-gaw = pd.read_csv("../data/gender_associated_word/masculine-feminine-person.txt")
-
-
 for _m, _f in zip(masculine_pronoun, feminine_pronoun) :
     masculineToFeminine[_m] = _f
     feminineToMasculine[_f] = _m
+
+# gender associated word
+gaw = pd.read_csv("../data/gender_associated_word/masculine-feminine-person.txt")
+    
+# gender salutation word
+male_salutation = ["Mr", "Mr.", "Mr.", "Mister", "Sir"]
+female_salutation = ["Ms", "Ms.", "Mrs.", "Miss", "Madam"]
+
+maleToFemaleSalutation = {}
+femaleToMaleSalutation = {}
+for _m, _f in zip(male_salutation, female_salutation) :
+    maleToFemaleSalutation[_m] = _f
+    femaleToMaleSalutation[_f] = _m
     
 
 class MutantGeneration:
@@ -40,7 +43,7 @@ class MutantGeneration:
     chunks = []
     person_reference = None
     person_name = None
-    person_substitution = None
+    main_placeholder = None
     
     def __init__(self, text):
         
@@ -164,28 +167,58 @@ class MutantGeneration:
             if token.text in self.person_entities and token.dep_ == "ROOT":        
                 return True
         return False
+    
+    def markGenderSalutationWord(self, text):
+        doc = nlp(text)
+        
+        salutations = []
+        if self.is_male :
+            salutation = male_salutation
+        else :
+            salutation = female_salutation
+        
+        placeholder = []
+        for token in doc:
+            if token.text in salutation :
+                placeholder.append("<sltn-" + token.text + ">")
+            elif token.text in self.person_entities :
+                if token.dep_ == "ROOT":
+                    placeholder.append("<name>")
+            else :
+                placeholder.append(token.text)
+
+        return " ".join(placeholder)
         
     def isThePersonNameSubstringOfTheMainReference(self) :
         return self.isContainAPersonNameAndItIsTheRoot(self.person_reference.getMainReference())
     
     def isTheRootOfTheTextAGenderAssociatedWord(self, text):
         doc_text = nlp(text)
+        
+        placeholder = []
+        
+        check = False
 
         main_token = None
         for token in doc_text:
 #             print(token.text, token.pos_, token.dep_)
             if token.pos_ == "NOUN" and token.dep_ == "ROOT" :
                 main_token = token.text
-        
-        if main_token != None :
-            if self.is_male :
-                if main_token in gaw["masculine"].values :
-                    return True
+                if self.is_male :
+                    if main_token in gaw["masculine"].values :
+                        check = True
+                else :
+                    if main_token in gaw["feminine"].values :
+                        check = True
+                if check :
+                    placeholder.append("<gaw>")
             else :
-                if main_token in gaw["feminine"].values :
-                    return True
-            
-        return False
+                placeholder.append(token.text)
+        
+        if check :
+            self.main_placeholder = " ".join(placeholder)
+
+        return check
         
     
     def isTheMainReferenceAGenderAssociatedWord(self) :
@@ -197,25 +230,53 @@ class MutantGeneration:
     def isTheReferencesContainNonPronoun(self) :
         for word in self.person_reference.getReferences() :
             if self.isAPersonName(word):
+                self.main_placeholder = "<name>"
                 return True
             if self.isContainAPersonNameAndItIsTheRoot(word) :
+                self.main_placeholder = self.markGenderSalutationWord(word)
                 return True
             if self.isTheRootOfTheTextAGenderAssociatedWord(word) :
                 return True
         return False
     
+
+            
     def generateTemplate(self) :
+        
+        main_placeholder = None
+        
         if self.isHavingOnePersonReference() :
             if self.isTheMainReferenceAPersonName() :
                 print("The Main Reference is a Person Name")
+                main_placeholder = "<name>"
             elif self.isThePersonNameSubstringOfTheMainReference() :
                 print("Person Name Substring of The Main Reference")
+                main_placeholder = self.markGenderSalutationWord(self.person_reference.getMainReference())
             elif self.isTheMainReferenceAGenderAssociatedWord() :
                 print("The Main Reference is a Gender Associated Word")
+                main_placeholder = self.main_placeholder
             elif self.isTheMainReferenceAPersonPronoun() :
                 print("The Main Reference is a Person Pronoun")
                 if self.isTheReferencesContainNonPronoun() :
                     print("The References Contain Non Prononun")
+                    main_placeholder = self.main_placeholder
                 else :
                     print("The References is Not Replaceable")
+                    
+            print(main_placeholder)
+        
+            t = [self.chunks[0]]
+            i = 1
+            if self.is_male :
+                for r in self.person_reference.getTokenReferences() :
+                    if r.word in masculine_pronoun :
+                        t.append("<pro-" + r.word + ">")
+                    else :
+                        t.append(main_placeholder)
+
+                    t.append(self.chunks[i])
+                    i += 1
+
+            self.template = " ".join(t).strip()
+            print(self.template)
         
