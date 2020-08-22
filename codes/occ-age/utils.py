@@ -748,7 +748,7 @@ def searchMutantSentence(sentenceList, checkedName, checkpoint, isLast, updateCh
                         if name != None:
                             isNameFound = True
                             ######## add to get one template only
-#                             isLast = True
+                            isLast = True
                             ########
 
                             mutantSentenceIndex = sentenceCounter
@@ -836,7 +836,7 @@ def searchMutantSentenceOcc(sentenceList, checkedOcc, checkpoint, isLast, update
                         occupation = occupation[0]
                         isOccupationFound = True
                         ######## add to get one template only
-#                         isLast = True
+                        isLast = True
                         ########
                         mutantSentenceIndex = sentenceCounter
                         if updateCheckpoint:
