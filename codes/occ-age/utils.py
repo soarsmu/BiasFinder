@@ -27,7 +27,6 @@ neuralcoref.add_to_pipe(nlp)
 #
 #
 
-
 def convertParticles(string):
     # function to delete fix particle spacing after text splitting
     # output:
@@ -155,7 +154,6 @@ class annotatedText:
                 'outputFormat': 'json',
                 'timeout': 9999999999,
             })
-    
     def getOriginalText(self):
         # return string of original text -> string
         return self.originalText
@@ -262,6 +260,19 @@ class annotatedText:
             return False
 
 class annotatedTextOcc(annotatedText):
+    
+    def __init__(self, text) :
+        self.originalText = text
+        self.text = nlp_wrapper.annotate(text,
+        properties={
+            'ner.applyNumericClassifiers' : 'false',
+            'ner.useSUTime' : 'false',
+            'ner.applyFineGrained': 'true',
+            'annotators': 'ner, pos',
+            'outputFormat': 'json',
+            'timeout': 9999999999,
+        })
+    
     def getName(self, sentence_index):
         # input:
             # sentence_index -> integer
@@ -736,6 +747,10 @@ def searchMutantSentence(sentenceList, checkedName, checkpoint, isLast, updateCh
                         name = mutantSentence.char_span(offsetBegin, offsetEnd)
                         if name != None:
                             isNameFound = True
+                            ######## add to get one template only
+#                             isLast = True
+                            ########
+
                             mutantSentenceIndex = sentenceCounter
                             if updateCheckpoint == True:
                                 checkedName = checkedName + (name.text,)
@@ -820,6 +835,9 @@ def searchMutantSentenceOcc(sentenceList, checkedOcc, checkpoint, isLast, update
                     if occupation != None:
                         occupation = occupation[0]
                         isOccupationFound = True
+                        ######## add to get one template only
+#                         isLast = True
+                        ########
                         mutantSentenceIndex = sentenceCounter
                         if updateCheckpoint:
                             checkedOcc = checkedOcc + (occupation.text,)
@@ -832,6 +850,8 @@ def searchMutantSentenceOcc(sentenceList, checkedOcc, checkpoint, isLast, update
     if sentenceCounter == len(sentenceList):
         checkpoint = sentenceCounter - 1
         isLast = True
+        
+#     print(mutantSentence, mutantSentenceIndex, occupation, isOccupationFound, checkedOcc, checkpoint, isLast)
     return mutantSentence, mutantSentenceIndex, occupation, isOccupationFound, checkedOcc, checkpoint, isLast
 
 def generateMutantOcc(mutantSentence, occupation):
@@ -946,7 +966,10 @@ def generateMultipleMutantAge(text):
     # output:
         # outputTuple -> tuple
     
-    strippedText = text.replace("<br />", '').strip()
+#     strippedText = text.replace("<br />", '').strip()
+    
+    strippedText = preprocessText(text)
+    
     # convert all the splitted sentence into list
     sentenceList = textSplitter(strippedText.strip()).getAllSentences()
 
@@ -1054,7 +1077,10 @@ def generateMultipleMutantOcc(text, occupationPlaceholder):
     # output:
         # outputTuple -> tuple
     
-    strippedText = text.replace("<br />", '').strip()
+#     strippedText = text.replace("<br />", '').strip()
+
+    strippedText = preprocessText(text)
+
     # convert all the splitted sentence into list
     sentenceList = textSplitter(strippedText.strip()).getAllSentences()
     
@@ -1091,3 +1117,44 @@ def generateMultipleMutantOcc(text, occupationPlaceholder):
                 for element in tempList:
                     outputTuple = outputTuple + ((element),)
     return outputTuple
+
+
+def restructureText(text):
+    # function to combine string in a list of string
+    # input:
+        # sentenceList -> list
+    # output:
+        # fulltext -> string
+    
+    fulltext = ''
+    doc = nlp(text)
+    for token in doc:
+#             print(token)
+        if token.text in symbol:
+            fulltext = fulltext + token.text
+        else:
+            fulltext = fulltext + ' ' + token.text
+    fulltext = convertParticles(fulltext.strip())
+    return fulltext
+
+
+def preprocessText(text):
+    text = removeHtmlTags(text)
+    text = removeHex(text)
+    text = removeBackslash(text)
+#     text = restructureText(text)
+    return text
+
+def removeHtmlTags(text):
+    """Remove html tags from a string"""
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', text)
+
+def removeHex(text):
+    """Remove hex from a string"""
+    text = text.encode().decode('unicode_escape')
+    return re.sub(r'[^\x00-\x7f]',r'', text)
+
+def removeBackslash(text):
+    """Remove backslash from a string"""
+    return text.replace("\\", "")
