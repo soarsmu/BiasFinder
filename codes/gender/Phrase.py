@@ -51,10 +51,12 @@ class Phrase:
         for token in tokens:
             if isInMasculineSalutation(token.text):
                 self.salutation = token.text
+                self.gender = "male"
                 return True
         for token in tokens:
             if isInFeminineSalutation(token.text):
                 self.salutation = token.text
+                self.gender = "female"
                 return True
         return False
 

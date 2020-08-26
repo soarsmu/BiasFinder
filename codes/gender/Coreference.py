@@ -13,6 +13,7 @@ class Coreference:
         self.main_reference = str(main)
         self.references = []
         self.position_references = []
+        self.gender = ""
         for token in references :
             self.references.append(Phrase(token.text))
             self.position_references.append(Position(token.text, token.start_char, token.end_char))
