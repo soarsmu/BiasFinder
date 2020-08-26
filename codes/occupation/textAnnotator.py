@@ -4,7 +4,7 @@ import spacy
 from pycorenlp import StanfordCoreNLP
 # nlp_wrapper = StanfordCoreNLP('10.4.0.15:9000')
 nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en_core_web_sm')
 
 class annotatedText:
     # Class to represent annotated text resulted from StandfordCoreNLP
