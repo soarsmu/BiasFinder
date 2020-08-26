@@ -652,14 +652,16 @@ def modifyOcc(occupation):
         
     repairedOcc = ''
     for token in occupation.children:
-        if token.pos_ not in ['NOUN'] and token.i < occupation.i:
-            for subtoken in token.children:
-                if subtoken.pos_ not in ['NOUN'] and subtoken.i < token.i:
-                    repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
+        if token.pos_  == 'DET' and token.i < occupation.i:
+            # for subtoken in token.children:
+            #     if subtoken.pos_ not in ['NOUN'] and subtoken.i < token.i:
+            #         repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
             repairedOcc = repairedOcc + ' ' + ''.join(token.text)
             for subtoken in token.children:
-                if subtoken.pos_ not in ['NOUN'] and subtoken.i > token.i:
+                if subtoken.i > token.i:
                     repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
+    
+    # repairedOcc = occupation.text.strip()
 
     repairedOcc = repairedOcc.strip()
     repairedOcc = '{} {}'.format(repairedOcc, occupation.text)
@@ -851,7 +853,7 @@ def searchMutantSentenceOcc(sentenceList, checkedOcc, checkpoint, isLast, update
         checkpoint = sentenceCounter - 1
         isLast = True
         
-#     print(mutantSentence, mutantSentenceIndex, occupation, isOccupationFound, checkedOcc, checkpoint, isLast)
+    # print(mutantSentence, mutantSentenceIndex, occupation, isOccupationFound, checkedOcc, checkpoint, isLast)
     return mutantSentence, mutantSentenceIndex, occupation, isOccupationFound, checkedOcc, checkpoint, isLast
 
 def generateMutantOcc(mutantSentence, occupation):
