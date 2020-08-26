@@ -28,4 +28,4 @@ class Entity:
         return self.ent_type
     
     def isPerson(self):
-        return self.ent_type == "PERSON"
+        return self.ent_type == "PERSON" and self.word[-2:] != "'s"

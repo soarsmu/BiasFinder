@@ -1,4 +1,5 @@
-from CustomToken import CustomToken as Token
+from Position import Position
+from Phrase import Phrase
 
 # Reference is a class to save Reference data
 # e.g. La Marquesa : [La Marquesa, her]
@@ -6,15 +7,15 @@ class Coreference:
     
     main_reference = ""
     references = []
-    token_references = []
+    position_references = []
         
-    def __init__(self, name, references):
-        self.main_reference = str(name)
+    def __init__(self, main, references):
+        self.main_reference = str(main)
         self.references = []
-        self.token_references = []
+        self.position_references = []
         for token in references :
-            self.references.append(token.text)
-            self.token_references.append(Token(token.text, token.start_char, token.end_char))
+            self.references.append(Phrase(token.text))
+            self.position_references.append(Position(token.text, token.start_char, token.end_char))
             
     def __str__(self) :
         return self.main_reference + ": " + str(self.references)
@@ -28,23 +29,21 @@ class Coreference:
     def getReferences(self):
         return self.references
     
-    def getTokenReferences(self):
-        return self.token_references
+    def getPositionReferences(self):
+        return self.position_references
     
-    # is having male subject
-    def isHavingMalePersonReference(self):
-        if "He" in self.references :
-            return True
-        elif "he" in self.references :
-            return True
-        else :
-            return False
+    def setPlaceholders(self, placeholders) :
+        self.placeholders = placeholders
+    
+    def getPlaceholders(self) :
+        return self.placeholders
+    
+    def getGender(self) :
+        return self.gender
 
-    # is having female subject
-    def isHavingFemalePersonReference(self):
-        if "She" in self.references :
-            return True
-        elif "she" in self.references :
-            return True
-        else :
-            return False
+    def setGender(self, gender) :
+        self.gender = gender
+
+    
+    
+

@@ -1,6 +1,6 @@
 # contain a word and its location inside the sentence
 # The location is indicated by start char and end char
-class CustomToken: 
+class Position: 
     word = ""
     start = 0
     end = 0
