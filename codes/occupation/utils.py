@@ -642,6 +642,13 @@ def getOccIndex(text, occupation):
             return token
     return None
 
+def checkNounPrecedingOcc(occupation):
+    for token in occupation.children:
+        if token.i < occupation.i:
+            if token.pos_ == 'NOUN' or token.pos_ == 'PROPN':
+                return True
+    return False
+
 def modifyOcc(occupation):
     # function to delete noun phrase between determiner and occupation
     # e.g: a high school student becomes a student
@@ -651,16 +658,38 @@ def modifyOcc(occupation):
         # repairedOcc -> string
         
     repairedOcc = ''
-    for token in occupation.children:
-        if token.pos_  == 'DET' and token.i < occupation.i:
-            # for subtoken in token.children:
-            #     if subtoken.pos_ not in ['NOUN'] and subtoken.i < token.i:
-            #         repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
-            repairedOcc = repairedOcc + ' ' + ''.join(token.text)
-            for subtoken in token.children:
-                if subtoken.i > token.i:
-                    repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
+    if checkNounPrecedingOcc(occupation):
+        for token in occupation.children:
+            if token.pos_  == 'DET' and token.i < occupation.i:
+                # for subtoken in token.children:
+                #     if subtoken.pos_ not in ['NOUN'] and subtoken.i < token.i:
+                #         repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
+                repairedOcc = repairedOcc + ' ' + ''.join(token.text)
+                for subtoken in token.children:
+                    if subtoken.i > token.i:
+                        repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
+    else:
+        for token in occupation.children:
+            if token.i < occupation.i:
+                for subtoken in token.children:                
+                    if subtoken.pos_ not in ['NOUN'] and subtoken.i < token.i:
+                        repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
+                repairedOcc = repairedOcc + ' ' + ''.join(token.text)
+                for subtoken in token.children:
+                    if subtoken.i > token.i:
+                        repairedOcc = repairedOcc + ' ' + ''.join(subtoken.text)
     
+    # repaired_occ = ''
+    # for token in occupation.children:
+    #     if token.pos_ not in ['NOUN'] and token.i < occupation.i:
+    #         for subtoken in token.children:
+    #             if subtoken.pos_ not in ['NOUN'] and subtoken.i < token.i:
+    #                 repaired_occ = repaired_occ + ' ' + ''.join(subtoken.text)
+    #         repaired_occ = repaired_occ + ' ' + ''.join(token.text)
+    #         for subtoken in token.children:
+    #             if subtoken.pos_ not in ['NOUN'] and subtoken.i > token.i:
+    #                 repaired_occ = repaired_occ + ' ' + ''.join(subtoken.text)
+        
     # repairedOcc = occupation.text.strip()
 
     repairedOcc = repairedOcc.strip()
