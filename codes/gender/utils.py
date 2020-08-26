@@ -15,11 +15,28 @@ nlp.add_pipe(coref, name='neuralcoref')
 
 symbol = ["!","#","$","%","*",",","/",":",";","@","^","_","`","|","~", ".", "?", ")", ">", "'m", "'s","'d","'ll","'ve","n't","'re", "~"]
 
+NAME = "name"
+PRONOUN = "pro"
+SALUTATION = "sltn"
+GAW = "gaw"
+
+# NAME_PLACEHOLDER = "<" + NAME + ">"
+# PRONOUN_PLACEHOLDER = "<" + PRONOUN + ">" 
+# SALUTATION_PLACEHOLDER = "<" + SALUTATION + ">"
+# GAW_PLACEHOLDER = "<" + GAW + ">"
+
+
 # masculine pronoun
 masculine_pronoun = ["he", "him", "his", "himself", "He", "Him", "His", "Himself", "HE"]
 
 # feminine prononun
 feminine_pronoun = ["she", "her", "her", "herself", "She","Her", "Her", "Herself", "SHE"]
+
+_masculineToFemininePronoun = {}
+_feminineToMasculinePronoun = {}
+for _m, _f in zip(masculine_pronoun, feminine_pronoun) :
+    _masculineToFemininePronoun[_m] = _f
+    _feminineToMasculinePronoun[_f] = _m
 
 # gender associated word
 gaw = pd.read_csv("../../data/gender_associated_word/masculine-feminine-person.txt")
@@ -29,6 +46,59 @@ feminine_gaw = gaw["feminine"].values
 # gender salutation word
 masculine_salutation = ["Mr", "Mr.", "Mr.", "Mister", "Sir"]
 feminine_salutation = ["Ms", "Ms.", "Mrs.", "Miss", "Madam"]
+
+_masculineToFeminineSalutation = {}
+_feminineToMasculineSalutation = {}
+for _m, _f in zip(masculine_salutation, feminine_salutation) :
+    _masculineToFeminineSalutation[_m] = _f
+    _feminineToMasculineSalutation[_f] = _m
+    
+
+# load name from gender computer
+# gc = pd.read_csv("../data/gc_name/data.csv")
+# gcm = gc[gc["Gender"] == "male"]
+# gcf = gc[gc["Gender"] == "female"]
+# # names from GC
+# # gcm = gcm[:2]
+# # gcf = gcf[:2]
+# mnames = gcm["Name"].tolist()
+# mcountries = gcm["Country"].tolist()
+# fnames = gcf["Name"].tolist()
+# fcountries = gcf["Country"].tolist()
+
+
+# small name for debugging
+mnames = ["Alonzo", "Adam"] 
+fnames = ["Ebony", "Amanda"]
+# mcountries = ["Trial", "Trial"]
+# fcountries = ["Trial", "Trial"]
+
+# countries = mcountries.copy()
+# countries.extend(fcountries)
+
+def masculineToFemininePronoun(_m):
+    return _masculineToFemininePronoun[_m]
+
+def feminineToMasculinePronoun(_f):
+    return _feminineToMasculinePronoun[_f]
+    
+def masculineToFeminineSalutation(male) :
+    return _masculineToFeminineSalutation[male]
+
+def feminineToMasculineSalutation(female) :
+    return _feminineToMasculineSalutation[female]
+
+def getMaleNamesFromGenderComputer() :
+    return mnames
+
+def getFemaleNamesFromGenderComputer() :
+    return fnames
+
+def getMasculineGenderAssociatedWord() :
+    return masculine_gaw
+
+def getFeminineGenderAssociatedWord() :
+    return feminine_gaw
 
 
 def removeHtmlTags(text):
@@ -111,11 +181,20 @@ def isInFeminineSalutation(text):
     return text in feminine_salutation
     
 def isInMasculineGenderAssosiatedWord(text):
-    return text in masculine_gaw
+    return text in getMasculineGenderAssociatedWord()
 
 def isInFeminineGenderAssosiatedWord (text):
-    return text in feminine_gaw
+    return text in getMasculineGenderAssociatedWord()
 
 def tag(text):
     return "<" + text + ">"
+
+def getPronounPlaceholders(placeholders) :
+    pronoun_placeholders = []
+    for placeholder in placeholders :
+        if "<" + PRONOUN in placeholder:
+            pronoun_placeholders.append(placeholder)
+            
+    return pronoun_placeholders
+        
 
