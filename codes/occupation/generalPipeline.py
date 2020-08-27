@@ -14,7 +14,7 @@ dataset = pd.read_csv(datasetLoc, encoding="latin1", sep="\t", names=["sentiment
 lb = 0 # lower bound
 # ub = 50 # upper bound
 # dataset = dataset[lb:ub]
-# dataset = dataset.sample(n = 1000, random_state=123)
+dataset = dataset.sample(n = 1000, random_state=123)
 
 
 def generalPipeline(dataset, occPlaceholderList):
@@ -23,7 +23,7 @@ def generalPipeline(dataset, occPlaceholderList):
     finalOutputOcc = ()
     counter = lb + 1
     for index, row in dataset.iterrows():
-        # print("count: {}".format(counter))
+        print("count: {}".format(counter))
         # print("now processing")
         # print(str(row.review.encode('utf-8')))
         # print()

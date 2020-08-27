@@ -18,7 +18,7 @@ nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
 symbol = ["!","#","$","%","*",",","/",":",";","@","^","_","`","|","~", ".", "?", ")", ">", "'m", "'s","'d","'ll","'ve","n't","'re", "~"]
 
 # nlp = spacy.load('en_core_web_sm')
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en_core_web_sm')
 neuralcoref.add_to_pipe(nlp)
 
 ### from textCleaner.py
