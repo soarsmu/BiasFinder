@@ -64,6 +64,8 @@ class Phrase:
         return self.salutation
         
     def isContainGenderAssociatedWord(self):
+        if not self.tokens :
+            self.tokens = nlp(self.phrase)
         tokens = self.tokens
         for token in tokens:
 #             print(token.text, token.pos_, token.dep_)

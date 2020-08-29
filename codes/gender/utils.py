@@ -82,10 +82,10 @@ def masculineToFeminineSalutation(male) :
 def feminineToMasculineSalutation(female) :
     return _feminineToMasculineSalutation[female]
 
-def getMaleNamesFromGenderComputer(N=10) :
+def getMaleNamesFromGenderComputer(N=30) :
     return mnames[:N]
 
-def getFemaleNamesFromGenderComputer(N=10) :
+def getFemaleNamesFromGenderComputer(N=30) :
     return fnames[:N]
 
 def getMasculineGenderAssociatedWord() :
