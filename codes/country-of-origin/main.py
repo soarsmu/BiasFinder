@@ -9,7 +9,9 @@ import time
 from utils import preprocessText
 from CountryMutantGeneration import CountryMutantGeneration
 
-df = pd.read_csv("../../data/imdb/test.csv", names=["label", "sentence"], sep="\t")
+# df = pd.read_csv("../../data/imdb/test.csv", names=["label", "sentence"], sep="\t")
+
+df = pd.read_csv("../../data/biasfinder/template_gender.csv")
 
 start = time.time()
 
@@ -24,7 +26,7 @@ i = 0
 counter = 0
 for index, row in df.iterrows():
     label = row["label"]
-    text = row["sentence"]
+    text = row["original"]
     text = preprocessText(text)
     mg = CountryMutantGeneration(text)
     i += 1
