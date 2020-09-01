@@ -9,7 +9,7 @@ import time
 from utils import preprocessText
 from MutantGeneration import MutantGeneration
 
-df = pd.read_csv("../../data/imdb/test.csv", names=["label", "sentence"], sep="\t")
+df = pd.read_csv("../../asset/imdb/test.csv", names=["label", "sentence"], sep="\t")
 
 # df = pd.read_csv("../../data/biasfinder/template_gender.csv")
 
@@ -39,7 +39,10 @@ for index, row in df.iterrows():
     text = preprocessText(text)
     mg = MutantGeneration(text)
     i += 1
-    if i%200 == 0 : print(i)
+    if i%500 == 0 : 
+        print("Text processed: ", i)
+        print("Template obtained: ", n_template)
+        print()
             
     if len(mg.getMutants()) > 0:
         n_template += 1

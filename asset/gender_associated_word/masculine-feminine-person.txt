@@ -1,0 +1,12 @@
+masculine,feminine
+boy,girl
+brother,sister
+daddy,mummy
+man,woman
+father,mother
+grandfather,grandmother
+husband,wife
+son,daughter
+uncle,aunt
+dad,mom
+gentleman,lady
