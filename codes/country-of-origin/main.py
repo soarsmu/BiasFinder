@@ -49,7 +49,7 @@ dm
 dm["template"] = dm["template"].astype("category")
 dm["template_id"] = dm["template"].cat.codes
 
-data_dir = "../../data/biasfinder/country"
+data_dir = "../../data/biasfinder/country/"
 
 if not os.path.exists(data_dir) :
     os.makedirs(data_dir)
