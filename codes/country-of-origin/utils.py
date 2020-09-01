@@ -38,7 +38,7 @@ for _m, _f in zip(masculine_pronoun, feminine_pronoun) :
     _feminineToMasculinePronoun[_f] = _m
 
 # gender associated word
-gaw = pd.read_csv("../../data/gender_associated_word/masculine-feminine-person.txt")
+gaw = pd.read_csv("../../asset/gender_associated_word/masculine-feminine-person.txt")
 masculine_gaw = gaw["masculine"].values
 feminine_gaw = gaw["feminine"].values
     
@@ -54,10 +54,10 @@ for _m, _f in zip(masculine_salutation, feminine_salutation) :
     
 
 # load name from gender computer
-gcm = pd.read_csv("../../data/gc_name/male_names_only.csv")
+gcm = pd.read_csv("../../asset/gender_computer/male_names_only.csv")
 gcm = gcm.sample(frac=1, random_state=123)
 mnames = gcm["name"].tolist()# # names from GC
-gcf = pd.read_csv("../../data/gc_name/female_names_only.csv")
+gcf = pd.read_csv("../../asset/gender_computer/female_names_only.csv")
 gcf = gcf.sample(frac=1, random_state=123)
 fnames = gcf["name"].tolist()# # names from GC
 
@@ -69,8 +69,8 @@ fnames = gcf["name"].tolist()# # names from GC
 
 # countries = mcountries.copy()
 # countries.extend(fcountries)
-male_country = pd.read_csv("../../data/gc_name/unique_male_names_and_country.csv")
-female_country = pd.read_csv("../../data/gc_name/unique_female_names_and_country.csv")
+male_country = pd.read_csv("../../asset/gender_computer/unique_male_names_and_country.csv")
+female_country = pd.read_csv("../../asset/gender_computer/unique_female_names_and_country.csv")
 
 def getMaleNamesAndTheirCountries() :
     return male_country["name"].tolist(), male_country["country"].tolist()
