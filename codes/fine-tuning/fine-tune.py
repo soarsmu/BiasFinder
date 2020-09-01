@@ -941,7 +941,7 @@ def main():
                 model.zero_grad()
                 global_step += 1
                 
-        torch.save(model.bert.state_dict(), args.save_model_dir + "epoch" + str(epoch) + ".pt")        
+        torch.save(model.bert.state_dict(), args.save_model_dir + "/epoch" + str(epoch) + ".pt")        
         
     
 if __name__ == "__main__":
