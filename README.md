@@ -159,6 +159,7 @@ python predict.py \
   --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
   --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
   --seed 42 \
+  --layers 11 10 \
   --trunc_medium -1 \
   --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
   --output_dir ./../../result/biasfinder/gender/
@@ -178,6 +179,7 @@ python predict.py \
   --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
   --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
   --seed 42 \
+  --layers 11 10 \
   --trunc_medium -1 \
   --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
   --output_dir ./../../result/biasfinder/occupation/
@@ -197,7 +199,9 @@ python predict.py \
   --eval_data_dir ./../../data/biasfinder/country/ \
   --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
   --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --train_batch_size 24 \
   --seed 42 \
+  --layers 11 10 \
   --trunc_medium -1 \
   --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
   --output_dir ./../../result/biasfinder/country/
