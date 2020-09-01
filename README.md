@@ -1,30 +1,38 @@
-# Fairness Bugs in Sentiment Analysis
+# BiasFinder: Uncovering Bias in Sentiment Analysis Systems through Metamorphic Testing
 
-NLP has been deployed in many domains to make our life better. So much so that it is easy to overlook their potential to benefit society by promoting equity, diversity, and fairness. Nonetheless, as NLP systems become more human-like in their predictions, they can also perpetuate human biases. Previous work showed that sentiment analysis systems can perpetuate and accentuate inappropriate human biases, e.g., systems that consider utterances from one race or gender to be less positive, or customer support systems that prioritize a call from an angry male over a call from the equally angry female. This repo contain an exploration research related to the bias in sentiment analysis task. 
+### Overview
 
-Fine-tuning text classification is inspired from https://github.com/xuyige/BERT4doc-Classification
+Artificial Intelligence (AI) systems, such as Sentiment Analysis (SA) systems, typically learn from large amounts of data that may reflect human biases. Consequently, SA systems may exhibit unintended demographic bias based on specific characteristics (e.g., gender, occupation, country-of-origin, etc.)  Such biases manifest in an SA system when it predicts a different sentiment for similar texts that differ only in the characteristic of individuals described. Existing studies on revealing bias in SA systems rely on the production of sentences from a small set of
+short, predefined templates. 
 
+To address this limitation, we present **BiasFinder**, an approach to discover biased predictions in SA systems via metamorphic testing. A key feature of BiasFinder is the automatic curation of suitable templates based on the pieces of text from a large corpus, using various Natural Language Processing (NLP) techniques to identify words that describe demographic characteristics. Next, BiasFinder instantiates new text from these templates by filling in placeholders with words associated with a class of a characteristic (e.g., gender-specific words such as female names, “she”, “her”). These texts are used to tease out bias in an SA system. 
+
+**BiasFinder** identifies a bias-uncovering test case when it detects that the SA system exhibits demographic bias for a pair of texts, i.e., it predicts a different sentiment for texts that differ only in words associated with a different class (e.g., male vs. female) of a target characteristic (e.g., gender). Our empirical evaluation showed that BiasFinder can effectively create a large number of realistic and diverse test cases that uncover various biases in an SA system with a high true positive rate.
 
 ## Requirements
 
-For further pre-training, we borrow some code from Google BERT. Thus, we need:
-
-+ tensorflow==1.1x -> currently tensorflow-gpu==1.14 is used
-+ spacy
-+ pandas
-+ numpy
-+ fastNLP
-
-For fine-tuning, we borrow some codes from pytorch-pretrained-bert package (now well known as transformers). Thus, we need:
+For fine-tuning SA, we modify some codes from [Xuyige et al](https://arxiv.org/abs/1905.05583) at this Github repository https://github.com/xuyige/BERT4doc-Classification. Xuyige et al. implement the fine-tuning task using pytorch-pretrained-bert package (now well known as transformers). Thus, we need:
 
 + torch>=0.4.1,<=1.2.0 -> currently torch 1.2.0 with cuda 10.0 is used
 
-For nlp task
+For nlp task, please install thess libraries:
++ spacy
++ pandas
++ numpy
 + scikit-learn
 + nltk
 + neuralcoref
++ fastNLP
 
-**Tips**: you may use docker for faster implemention on your coding environment. https://hub.docker.com/r/pytorch/pytorch/tags provide several version of PyTorch containers. Pull the appropiate pytorch container with the tag 1.2.0 version.
+For preparing data from [genderComputer](https://github.com/tue-mdse/genderComputer), please install thess libraries:
++ python-nameparser
++ unidecode
+
+**Tips**: you may use docker for faster implemention on your coding environment. https://hub.docker.com/r/pytorch/pytorch/tags provide several version of PyTorch containers. Please pull the appropiate pytorch container with the tag 1.2 version, using this command.
+
+```
+docker pull pytorch/pytorch:1.2-cuda10.0-cudnn7-devel
+```
 
 ## Setup and Trial for the Experiment
 
@@ -34,23 +42,21 @@ This part will tell you the preparation needed. If you don't find any error in t
 
 #### The Datasets
 
-We use IMDB movie review dataset downloaded from [URL](https://drive.google.com/drive/u/0/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M) proposed by [Zhang et al. (2015)](https://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf). The notebook `codes/prepare-data.ipynb` will help you to know how to use the IMDB dataset and make it into train test input for our model.
-
-#### Pretrained Model
-
-Pretrained models are available at [here](https://drive.google.com/drive/folders/1Rbi0tnvsQrsHvT_353pMdIbRwDlLhfwM). Currently, I use `pytorch_model_len128_imdb.bin`. Put it inside the folder `models/pretrained/`.
+We use IMDB movie review dataset downloaded from [URL](https://drive.google.com/drive/u/0/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M) proposed by [Zhang et al. (2015)](https://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf). The IMDB dataset is saved at `asset/imdb/`.
 
 
 ### 2) Prepare Google BERT:
 
-Download [BERT-Base, Uncased](https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip) model. You will get `uncased_L-12_H-768_A-12` folder. Put it inside `models/`.
+Please download [BERT-Base, Uncased](https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip) model. You will get `uncased_L-12_H-768_A-12` folder. Put it inside `models/`.
 
 
-### 3) Further Pre-Training:
+<!-- #### Pretrained Model
 
-Since we use pretrained model form IMDB, this part is not a necessary. But previously I tried to run it and it worked on AG news dataset. For further pretraining using another model or dataset, please take a look at the [BERT fine-tuning repository](https://github.com/xuyige/BERT4doc-Classification)
+Pretrained models are available at [here](https://drive.google.com/drive/folders/1Rbi0tnvsQrsHvT_353pMdIbRwDlLhfwM). Currently, I use `pytorch_model_len128_imdb.bin`. Put it inside the folder `models/pretrained/`. -->
 
-### 4) Fine-Tuning using IMDB and EEC Then Evaluate the model on Desired Data
+
+
+### 4) Fine-Tuning using IMDB
 
 #### Before fine-tuning please take a look at several notebook
 
