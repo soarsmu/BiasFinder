@@ -9,9 +9,9 @@ import time
 from utils import preprocessText
 from MutantGeneration import MutantGeneration
 
-# df = pd.read_csv("../../data/imdb/test.csv", names=["label", "sentence"], sep="\t")
+df = pd.read_csv("../../data/imdb/test.csv", names=["label", "sentence"], sep="\t")
 
-df = pd.read_csv("../../data/biasfinder/template_gender.csv")
+# df = pd.read_csv("../../data/biasfinder/template_gender.csv")
 
 # df = pd.read_csv("user_study_country-artha.csv")
 # df = df[df["mod"] == 0]
@@ -34,12 +34,8 @@ n_template = 0
 i = 0
 counter = 0
 for index, row in df.iterrows():
-
-#     label = 0
-#     text = row["text"]
-    
     label = row["label"]
-    text = row["original"]    
+    text = row["sentence"]
     text = preprocessText(text)
     mg = MutantGeneration(text)
     i += 1
@@ -62,8 +58,8 @@ dm
 dm["template"] = dm["template"].astype("category")
 dm["template_id"] = dm["template"].cat.codes
 
-print(n_template)
-print(len(dm))
+# print(n_template)
+# print(len(dm))
 
 data_dir = "../../data/biasfinder/gender/"
 

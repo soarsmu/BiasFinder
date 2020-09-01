@@ -98,7 +98,8 @@ class CountryMutantGeneration:
     
     def isValid(self, coref):
         placeholders = []
-        # print("COREF: " + str(coref.getReferences()))
+
+#         print("COREF: " + str(coref.getReferences()))
         gender = ""
         
         has_gender = False
@@ -317,12 +318,13 @@ text = "This is a wonderful family sitcom. Rowan Atkinson has appeared in to oth
 # text = "Luc Besson's first work is also his first foray in science fiction, a genre to which he will return fourteen years later with \" the Fifth Element \" ( 1997). Even if this film was strongly influenced by Hollywood cinema, it is still highly enjoyable. Back in 1983, \" le Dernier Combat \" reveals Besson's own approach of science fiction. He takes back a threadbare topic and his efforts are discernible to make a stylish work. Shot in widescreen and black and white, a disaster has destroyed virtually all the population from earth and we will never know what was this disaster and why men can't talk any more. Some barbarian hordes were formed. In parallel, a man ( Pierre Jolivet) lives on his own and arrives in an unrecognizable Paris where he is received by a doctor ( Jean Bouise). There are no words in Besson's work. The characters ' actions and the progression of the events go through looks and gestures. Although the starting point and the backdrop are unnerving, the film has never the look of a despondent one. It seems that the man and the doctor try to reproduce gestures and actions linked to mankind before the disaster. The film opens with the man having sex with an inflatable doll. Later, the doctor tries to make him speak through a machine and he is a painter in his spare time. It's all the more intriguing as these paintings seem to come from the prehistoric times. Following this reasoning, one could argue that the bearded giant ( Jean Reno) embodies evil and a threat to the efforts deployed by the man and the doctor to regain what finally made a human being. Ditto for the gang of baddies at the beginning of the film. The pessimistic whiff that such a film could convey isn't really at the fore and gives way to a glimmer of hope. Personally, the film could have gained with no music at all, except the one the man can hear with his cassette recorder. Luc Besson was to make better and still entrancing films like this one, he also boosted Pierre Jolivet's career as a director who will leave a patchy work behind him in the future: \" Force Majeure \" ( 1989), \" Simple Mortel \" ( 1991), \" ma Petite Entreprise \" ( 1999) or \" Filles Uniques \" ( 2003)."
 
 
-# text = preprocessText(text)
+text = "A young woman, Jodie Foster, is witnessing a mafia murder, reports the killing to the local police, and becomes herself a hit target by the mob operatives. A professional killer, Dennis Hopper, hired by mafia, is stalking her to prepare for the hit, but eventually he falls for her. Then, as a parody of the Stockholm Syndrome that defines a case when an abducted hostage begins to like and cooperate with the kidnapper, Jodie Foster falls for her abductor too, make love, and both prepare for a getaway. Denis Hopper, the actor, tries to align himself with the creative ambitions of Dennis Hopper, the director. The result is disappointing, and fails to keep pace with the artistic level of a great performer as Dennis Hopper is. There is no real thrill and the script is sometimes naive and predictable. The film is saved to some extent by the performance of Jodie Foster who is not at her best, but still shines with her talent, beauty and gift. Of historical interest is the short appearance of Vincent Price, and, in a small act, of Charlie Sawn known from his great part in \" Wall Street \". If you decide to spend the 116 minutes to see the film, it is not a complete loss; this movie offers easy entertainment, but we would expect much more from the director of \" Easy Rider \", and the actress who gave us the character of Sarah Tobias in \" The Accused \."
 
+text = preprocessText(text)
 
-# mg = CountryMutantGeneration(text)
+mg = CountryMutantGeneration(text)
 # print(mg.getMutants())
-# print(mg.getTemplate())
+print(mg.getTemplate())
 # print(len(mg.getMutants()))
 
 
