@@ -56,7 +56,7 @@ Please download [BERT-Base, Uncased](https://storage.googleapis.com/bert_models/
 
 ### 3) Fine-Tune BERT on SA using IMDB
 
-#### Convert BERT Tensforflow ckpt into PyTorch checkpoint
+#### Convert BERT Tensforflow checkpoint into PyTorch checkpoint
 
 Run this command inside the `codes/fine-tuning/` folder.
 
@@ -90,16 +90,16 @@ python fine-tune.py \
   --save_model_dir ./../../models/fine-tuning/pytorch_imdb_fine_tuned/
 ```
 
-
 **Important Parameter**
 
 Parameter | Description
 ------------ | -------------
---fine_tune_data_dir | Data for fine-tuning on downstream task, currently IMDB. You need to put `train.csv` inside the folder
---init_checkpoint | PyTorch initial checkpoint for fine-tuning
---save_model_dir | The folder to save the fine-tuned model. The model will have several version based on the `num_train_epochs`
+`fine_tune_data_dir` | Data for fine-tuning on downstream task, currently IMDB. You need to put a training file, named `train.csv`, inside the folder
+`init_checkpoint` | PyTorch initial checkpoint for fine-tuning
+`save_model_dir` | The folder to save the fine-tuned model. The model will have several version based on the `num_train_epochs`
 
 **Another Parameter**
+
 You can use the default parameters stated on the PyTorch BERT example.
 
 + ``num_train_epochs`` can be 3.0, 5.0, or 6.0.
@@ -113,114 +113,190 @@ other natural number k means head-k + tail-rest (e.g.: head-k + tail-(512-k)).
 
 ## Mutant Generation
 
-### 1. Gender Bias
+Our framework, **BiasFinder**, can be instantiated to identify different kinds of bias. In this work, we show how BiasFinder can be instantiated to uncover bias in three different demographic characteristics: gender, occupation, and country-oforigin.
 
-### 2. Occupation Bias
-### 3. Country-of-origin Bias
+BiasFinder automatically identifies and curates suitable texts in a large corpus of reviews, and transforms these texts into templates. Each template can be used to produce a large number of mutant texts, by filling in placeholders with concrete values associated with a class (e.g., male vs. female) given a demographic characteristic (e.g., gender)(See Section III and IV). Using these mutant texts, **BiasFinder** then runs the SA system under test, checking if it predicts the same sentiment for two mutants associated with a different class (e.g. male vs. female) of the given characteristic (e.g. gender). A pair of such mutants are related through a metamorphic relation where they share the same predicted sentiment from a fair SA system (See Section V and VI).
+
+### 1) Gender Bias
+Run this command inside the `codes/gender/` folder
+
+```
+python main.py
+```
+
+This code will generate mutant texts for gender and saved the mutant texts inside a folder `data/biasfinder/gender/`
+
+### 2) Occupation Bias
+
+Run this command inside the `codes/occupation/` folder
+
+```
+python main.py
+```
+
+This code will generate mutant texts for occupation and saved the mutant texts inside a folder `data/biasfinder/occupation/`
+
+### 3) Country-of-origin Bias
+
+Run this command inside the `codes/country/` folder
+
+```
+python main.py
+```
+
+This code will generate mutant texts for country-of-origin and saved the mutant texts inside a folder `data/biasfinder/country/`
+
+## Predict The Mutant Texts using Fine-tuned BERT
+
+### 1) Gender Bias
+Run this command inside the `codes/fine-tuning/` folder
+
+```
+python predict.py \
+  --task_name binary \
+  --do_lower_case \
+  --eval_data_dir ./../../data/biasfinder/gender/ \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --seed 42 \
+  --trunc_medium -1 \
+  --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
+  --output_dir ./../../result/biasfinder/gender/
+```
+
+This code will produce a prediction of mutant texts inside the folder `result/biasfinder/gender/`
+
+### 2) Occupation Bias
+
+Run this command inside the `codes/fine-tuning/` folder
+
+```
+python predict.py \
+  --task_name binary \
+  --do_lower_case \
+  --eval_data_dir ./../../data/biasfinder/occupation/ \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --seed 42 \
+  --trunc_medium -1 \
+  --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
+  --output_dir ./../../result/biasfinder/occupation/
+
+```
+
+This code will produce a prediction of mutant texts inside the folder `result/biasfinder/occupation/`
+
+### 3) Country-of-origin Bias
+
+Run this command inside the `codes/fine-tuning/` folder
+
+```
+python predict.py \
+  --task_name binary \
+  --do_lower_case \
+  --eval_data_dir ./../../data/biasfinder/country/ \
+  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
+  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
+  --seed 42 \
+  --trunc_medium -1 \
+  --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
+  --output_dir ./../../result/biasfinder/country/
+
+```
+
+This code will produce a prediction of mutant texts inside the folder `result/biasfinder/country/`
+
+
 
 ## Measuring the Bias Uncovering Test Case (BTC)
 
-BTC is a pair contain of male-female and its prediction, such that the Sentiment Analysis produce a different prediction. 
-Example of discordant pair: 
+Mutants of differing classes that are produced from the same template are expected to have the same sentiment. Therefore, if the SA predicts that two mutants of different classes to have different sentiments, they are an evidence of a biased prediction. Such pairs of mutants are output as **bias-uncovering test cases (BTC)**. Thus BTC is a pair that contains 2 different class (e.g. male female for gender bias) and their predictions, such that the Sentiment Analysis produce a different prediction. 
+Example of BTC for gender bias: 
 
 `<(male, prediction), (female, prediction)>`
 
-`<(“He is angry”, 1), (“She is angry”, 0)>`
+`<(“He is angry”, "positive"), (“She is angry”, "negative")>`
 
-### 1. Gender Bias
-### 2. Occupation Bias
-### 3. Country-of-origin Bias
+### 1) Gender Bias
 
+Notebook `codes/gender/BTC.ipynb` contains the BTC calculation for gender bias targeting mutant texts.
 
-## Country-of-origin Bias Experiment
-#### Data Preparation
-`codes/prepare-data-from-gender-computer.ipynb` -> prepare data from [GenderComputer](https://github.com/tue-mdse/genderComputer/tree/master/nameLists)
+### 2) Occupation Bias
 
-`codes/mutant-generation-using-EEC-template.ipynb` -> mutant generation by substituting name from GenderComputer into EEC template
+Notebook `codes/occupation/BTC.ipynb` contains the BTC calculation for occupation bias targeting mutant texts.
 
-#### Infer the prediction using Generated Mutant
-```shell
-python infer.py   \
-  --task_name binary \
-  --do_lower_case \
-  --fine_tune_data_1_dir ./../../data/imdb/ \
-  --eval_data_dir ./../../data/gc_mutant/ \
-  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
-  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
-  --init_checkpoint ./../../models/pretrained/pytorch_model_len128_imdb.bin \
-  --max_seq_length 128   \
-  --train_batch_size 24   \
-  --learning_rate 2e-5   \
-  --num_train_epochs 1   \
-  --seed 42   \
-  --layers 11 10   \
-  --trunc_medium -1 \
-  --output_dir ./../../result/gc_mutant/
-```
+### 3) Country-of-origin Bias
 
-#### Calculate FPED and FNED
-`codes/FNED-FPED-Country.ipynb` -> FNED and FPED calculation for country. But it's easily adopted to use calculation for others, such as gender and occupation.
-
-
-#### Calculate Number of Discordant Pairs
-`codes/discordant-pairs-Country.ipynb` -> Discordant pairs calculation for country. But it's easily adopted to use calculation for others, such as gender and occupation.
-
+Notebook `codes/country/BTC.ipynb` contains the BTC calculation for country-of-origin bias targeting mutant texts.
 
 ## Notes
-Here the file structure to better know where to put the models and data:
+Here the final file structure to better know where to put the models and data:
 
 ```
 .
 |-- LICENSE
 |-- README.md
-|-- codes
-|   |-- FNED-FPED.ipynb
-|   |-- discordant-pairs.ipynb
-|   |-- fine-tuning
-|   |   |-- fairness_test.py
-|   |   |-- infer.py
-|   |   `-- tokenization.py
-|   |-- further-pre-training
-|   |   |-- run_pretraining.py
-|   |-- mutant-generation.ipynb
-|   |-- prepare-data-for-eec.ipynb
-|   |-- prepare-data-for-imdb.ipynb
-|   `-- prepare-masculine-feminine-word.ipynb
-|-- data
-|   |-- asset
+|-- asset
+|   |-- gender_associated_word
 |   |   |-- masculine-feminine-cleaned.txt
+|   |   |-- masculine-feminine-person.txt
 |   |   `-- masculine-feminine.txt
-|   |-- eec
-|   |   |-- 5persen
-|   |   |   |-- female
-|   |   |   |   `-- test.csv
-|   |   |   |-- male
-|   |   |   |   `-- test.csv
-|   |   |   |-- test.csv
-|   |   |   `-- train.csv
-|   |   |-- 6from7
-|   |   |   |-- female
-|   |   |   |   `-- test.csv
-|   |   |   |-- male
-|   |   |   |   `-- test.csv
-|   |   |   `-- train.csv
-|   |   |-- data.csv
-|   |   |-- test.csv
-|   |   `-- train.csv
+|   |-- gender_computer
+|   |   |-- female_names_only.csv
+|   |   |-- male_names_only.csv
+|   |   |-- unique_female_names_and_country.csv
+|   |   `-- unique_male_names_and_country.csv
 |   |-- imdb
 |   |   |-- test.csv
 |   |   `-- train.csv
-|   |-- imdb_mutant
-|   |   |-- female
-|   |   |   `-- test.csv
-|   |   `-- male
-|   |       `-- test.csv
 |   `-- imdb_small
 |       |-- test.csv
 |       `-- train.csv
+|-- codes
+|   |-- country
+|   |   |-- BTC.ipynb
+|   |   |-- Coreference.py
+|   |   |-- CountryMutantGeneration.py
+|   |   |-- Entity.py
+|   |   |-- Phrase.py
+|   |   |-- main.py
+|   |   |-- mutant-generation-example-for-testing.ipynb
+|   |   `-- utils.py
+|   |-- occupation
+|   |   |-- BTC.ipynb
+|   |   |-- Coreference.py
+|   |   |-- CountryMutantGeneration.py
+|   |   |-- Entity.py
+|   |   |-- Phrase.py
+|   |   |-- main.py
+|   |   |-- mutant-generation-example-for-testing.ipynb
+|   |   `-- utils.py
+|   `-- gender
+|       |-- BTC.ipynb
+|       |-- Coreference.py
+|       |-- MutantGeneration.py
+|       |-- Entity.py
+|       |-- Phrase.py
+|       |-- main.py
+|       |-- mutant-generation-example-for-testing.ipynb
+|       `-- utils.py
+|-- data
+|   `-- biasfinder
+|       |-- country
+|       |   `-- test.csv
+|       |-- gender
+|       |   `-- test.csv
+|       `-- occupation
+|           `-- test.csv
 |-- models
-|   |-- pretrained
-|   |   `-- pytorch_model_len128_imdb.bin
+|   |-- fine-tuning
+|   |   |-- pytorch_bert_base_model.bin
+|   |   `-- pytorch_imdb_fine_tuned
+|   |       |-- epoch1.pt
+|   |       |-- epoch2.pt
+|   |       |-- epoch3.pt
+|   |       |-- epoch4.pt
+|   |       `-- epoch5.pt
 |   `-- uncased_L-12_H-768_A-12
 |       |-- bert_config.json
 |       |-- bert_model.ckpt.data-00000-of-00001
@@ -228,11 +304,15 @@ Here the file structure to better know where to put the models and data:
 |       |-- bert_model.ckpt.meta
 |       `-- vocab.txt
 `-- result
-    `-- trial_small_imdb
-        |-- discordant-pairs.csv
-        |-- eval_data_female_results.txt
-        |-- eval_data_male_results.txt
-        |-- fped-fned-discordant-pairs.txt
-        |-- results_data_female.txt
-        `-- results_data_male.txt
+    `-- biasfinder
+        |-- country
+        |   |-- eval_data_results.txt
+        |   `-- results_data.txt
+        |-- gender
+        |   |-- eval_data_results.txt
+        |   `-- results_data.txt
+        `-- occupation
+            |-- eval_data_results.txt
+            `-- results_data.txt
+    
 ```
