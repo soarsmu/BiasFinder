@@ -12,7 +12,8 @@ import pandas as pd
 # # df = df.sample(n = 1000, random_state = 123)
 
 # excludeList = ['director', 'actor', 'actress', 'filmmaker', 'writer', 'artist', 'scriptwriter', 'reviewer', 'commentator', 'slasher']
-
+symbol = ["!","#","$","%","*",",","/",":",";","@","^","_","`","|","~", ".", "?", ")", ">", "~"]
+auxil = ["'m", "'s","'d","'ll","'ve","n't","'re"]
 
 
 from string import punctuation
@@ -74,6 +75,20 @@ class annotatedText:
             # return the number of entity in integer that exist in a sentence[sentenceIndex] -> integer
         return len(self.getAnnotatedSentence(sentenceIndex)['entitymentions'])
     
+    def getSentence(self, sentenceIndex):
+        # input:
+            # sentenceIndex -> integer
+        # output:
+            # sentence -> string
+        sentence = ''
+        for i in range(self.getNumberOfToken(sentenceIndex)):
+            token = self.getAnnotatedSentence(sentenceIndex)['tokens'][i]['originalText']
+            if token in symbol:
+                sentence = sentence + ''.join(token)
+            else:
+                sentence = sentence + ' ' + ''.join(token)
+        return sentence.strip()
+    
 
 class annotatedTextOcc(annotatedText):
     def getName(self, sentenceIndex):
@@ -108,6 +123,7 @@ class annotatedTextOcc(annotatedText):
                         offsetBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetBegin']
                         offsetEnd = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetEnd']
                         occupationList.append((occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin))
+                        
         return occupationList
     
     def checkPosTag(self, sentenceIndex, occupation):
@@ -149,7 +165,7 @@ class annotatedTextOcc(annotatedText):
             # if token is not available in the sentence, return -999
         
         for i in range(self.getNumberOfToken(sentenceIndex)):
-            if self.getAnnotatedSentence(sentenceIndex)['tokens'][i]['originalText'].strip(punctuation).strip(digits) == token:
+            if self.getAnnotatedSentence(sentenceIndex)['tokens'][i]['originalText'] == token:
                 return i
         return -999
     
@@ -164,16 +180,21 @@ class annotatedTextOcc(annotatedText):
             return False
 
     def getAllOccupation(self):
-        occList = []
+        occupationDict = {}
         for i in range(self.getNumberOfSentence()):
             occListTemp = self.getOccupation(i)
             if len(occListTemp) > 0:
-                occList.append(occListTemp)
-        
-        return occList
+                for element in occListTemp:
+                    occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin = element
+                    if occ not in occupationDict.keys():
+                        occupationDict[occ] = [(sentenceIndex, tokenBegin, offsetBegin, offsetEnd)]
+                    else:
+                        occupationDict[occ].append((sentenceIndex, tokenBegin, offsetBegin, offsetEnd))
+            
+        return occupationDict
             
 
-test = "John is a fisherman. John meets with other fisherman today"
+test = "John is a fisherman. However, his wife, a teacher, goes to school. John meets with other fisherman today"
 at = annotatedTextOcc(test)
 
     # def getTokenEndSentence(self, sentenceIndex):
