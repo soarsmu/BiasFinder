@@ -8,10 +8,10 @@ Created on Sat Aug 29 11:58:39 2020
 
 import pandas as pd
 
-df = pd.read_csv("./new/check.csv")
-# df = df.sample(n = 1000, random_state = 123)
+# df = pd.read_csv("./new/check.csv")
+# # df = df.sample(n = 1000, random_state = 123)
 
-excludeList = ['director', 'actor', 'actress', 'filmmaker', 'writer', 'artist', 'scriptwriter', 'reviewer', 'commentator', 'slasher']
+# excludeList = ['director', 'actor', 'actress', 'filmmaker', 'writer', 'artist', 'scriptwriter', 'reviewer', 'commentator', 'slasher']
 
 
 
@@ -102,11 +102,12 @@ class annotatedTextOcc(annotatedText):
             if len(self.getName(sentenceIndex)) > 0:
                 if self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['ner'] == 'TITLE':
                     temp_occ = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['text']
-                    if len(temp_occ.split()) == 1:
+                    if len(temp_occ.split()) == 1 and self.checkPosTag(sentenceIndex, temp_occ):
                         occ = temp_occ
+                        tokenBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['tokenBegin']
                         offsetBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetBegin']
                         offsetEnd = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetEnd']
-                        occupationList.append((occ, offsetBegin, offsetEnd, sentenceIndex))
+                        occupationList.append((occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin))
         return occupationList
     
     def checkPosTag(self, sentenceIndex, occupation):
@@ -161,7 +162,20 @@ class annotatedTextOcc(annotatedText):
                 return False
         else:
             return False
+
+    def getAllOccupation(self):
+        occList = []
+        for i in range(self.getNumberOfSentence()):
+            occListTemp = self.getOccupation(i)
+            if len(occListTemp) > 0:
+                occList.append(occListTemp)
         
+        return occList
+            
+
+test = "John is a fisherman. John meets with other fisherman today"
+at = annotatedTextOcc(test)
+
     # def getTokenEndSentence(self, sentenceIndex):
     #     if sentenceIndex != self.getNumberOfSentence():
     #         # print(self.getNumberOfSentence())
@@ -174,33 +188,33 @@ class annotatedTextOcc(annotatedText):
     #         print(self.getOriginalText()[0:endToken])
     #         print(self.getOriginalText()[beginToken:])
         
-import time
-start_time = time.time()
+# import time
+# start_time = time.time()
 
-counter = 1
-templateList1 = []
-for index, row in df.iterrows():
-    print("counter: {}".format(counter))
-    counter += 1
-    oriText = row.original
-    # oriText = "There must have been a sale on this storyline back in the 40's. An epidemic threatens New York ( it's always New York) and nobody takes it seriously. Some might say that Richard Widmark and Jack Palance did it better in Panic in the Streets, but I disagree. There is always something about these Poverty Row productions that really touch a nerve. The production values are never that polished and the acting is a little rough around the edges, but that is the very reason I think this movie and those like it are effective. Rough, grainy, edgy. And the cast. All 2nd stringers or A list actors past their prime. No egos here. These folks were happy to get the work. Whit Bissell, Carl Benton Reid, Jim Backus, Arthur Space, Charles Korvin, and the melodious voice of Reed Hadley flowing in the background like crude oil. By the way, I've been in the hospital a couple of times; how come my nurses never looked like Dorothy Malone? In these kind of movies they don't bother much with make - up and hair, but they really managed to turn Evelyn Keyes into a hag. Or maybe they just skipped the make - up and hair altogether. Anyway, it was pretty effective. She plays a lovesick jewel smuggler who picks up a case of Small Pox in Cuba while smuggling jewels back for ultra - villain Charles Korvin ( who is boffing her sister in the meantime). You got the Customs Agents looking for her because of the jewels, and the Health Department looking for her because she's about to de - populate New York. No 4th Amendment rights here. Everybody gets hassled. You got ta have the right attitude to enjoy a movie like this. I have a brother who scrutinizes movies to death. If they don't hold up to his Orson Wellian standards, he bombs them unmercifully. They must have the directorial excellence of a David Lean movie, the score of Wolfgang von Korngold, the Sound and Art of Douglas Shearer and Cedric Gibbons respectively. This ain't it. But I have the right attitude, and if you do as well, you'll love this movie."
-    at = annotatedTextOcc(oriText)
-    occList = []
-    for i in range(at.getNumberOfSentence()):
+# counter = 1
+# templateList1 = []
+# for index, row in df.iterrows():
+#     print("counter: {}".format(counter))
+#     counter += 1
+#     oriText = row.original
+#     # oriText = "There must have been a sale on this storyline back in the 40's. An epidemic threatens New York ( it's always New York) and nobody takes it seriously. Some might say that Richard Widmark and Jack Palance did it better in Panic in the Streets, but I disagree. There is always something about these Poverty Row productions that really touch a nerve. The production values are never that polished and the acting is a little rough around the edges, but that is the very reason I think this movie and those like it are effective. Rough, grainy, edgy. And the cast. All 2nd stringers or A list actors past their prime. No egos here. These folks were happy to get the work. Whit Bissell, Carl Benton Reid, Jim Backus, Arthur Space, Charles Korvin, and the melodious voice of Reed Hadley flowing in the background like crude oil. By the way, I've been in the hospital a couple of times; how come my nurses never looked like Dorothy Malone? In these kind of movies they don't bother much with make - up and hair, but they really managed to turn Evelyn Keyes into a hag. Or maybe they just skipped the make - up and hair altogether. Anyway, it was pretty effective. She plays a lovesick jewel smuggler who picks up a case of Small Pox in Cuba while smuggling jewels back for ultra - villain Charles Korvin ( who is boffing her sister in the meantime). You got the Customs Agents looking for her because of the jewels, and the Health Department looking for her because she's about to de - populate New York. No 4th Amendment rights here. Everybody gets hassled. You got ta have the right attitude to enjoy a movie like this. I have a brother who scrutinizes movies to death. If they don't hold up to his Orson Wellian standards, he bombs them unmercifully. They must have the directorial excellence of a David Lean movie, the score of Wolfgang von Korngold, the Sound and Art of Douglas Shearer and Cedric Gibbons respectively. This ain't it. But I have the right attitude, and if you do as well, you'll love this movie."
+#     at = annotatedTextOcc(oriText)
+#     occList = []
+#     for i in range(at.getNumberOfSentence()):
         
-        occTempList = at.getOccupation(i)
+#         occTempList = at.getOccupation(i)
         
-        occList += occTempList
+#         occList += occTempList
     
-    print(occList)
-    if len(occList) == 1 and occList[0] not in excludeList:
-        templateList1.append((row.template_id,row.template))
+#     print(occList)
+#     if len(occList) == 1 and occList[0] not in excludeList:
+#         templateList1.append((row.template_id,row.template))
         
             
     
 
 
-print("--- %s seconds ---" % (time.time() - start_time))
+# print("--- %s seconds ---" % (time.time() - start_time))
 
 # placeholderList = pd.read_csv("./asset/neutral-occupation.csv")
 # placeholderList = placeholderList['occupation'].to_list()
