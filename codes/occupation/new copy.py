@@ -81,13 +81,28 @@ class annotatedText:
         # output:
             # sentence -> string
         sentence = ''
-        for i in range(self.getNumberOfToken(sentenceIndex)):
-            token = self.getAnnotatedSentence(sentenceIndex)['tokens'][i]['originalText']
-            if token in symbol:
-                sentence = sentence + ''.join(token)
-            else:
-                sentence = sentence + ' ' + ''.join(token)
-        return sentence.strip()
+        # for i in range(self.getNumberOfToken(sentenceIndex)):
+        #     token = self.getAnnotatedSentence(sentenceIndex)['tokens'][i]['originalText']   
+        #     if token in symbol and token in auxil:
+        #         sentence = sentence + ''.join(token)
+        #     else:
+        #         sentence = sentence + ' ' + ''.join(token)
+        # return sentence.strip()
+        offsetBegin = self.getAnnotatedSentence(sentenceIndex)['tokens'][0]['characterOffsetBegin']
+        offsetEnd = self.getAnnotatedSentence(sentenceIndex)['tokens'][-1]['characterOffsetEnd']
+        sentence = self.getOriginalText()[offsetBegin:offsetEnd]
+        return sentence
+
+    def constructSentence(self, start, end):
+        # input:
+            # start -> integer
+            # end -> integer
+        # output:
+            # text -> string
+        text = ''
+        for i in range(start, end+1):
+            text = text + ' ' + self.getSentence(i)
+        return text.strip() 
     
 
 class annotatedTextOcc(annotatedText):
@@ -119,10 +134,12 @@ class annotatedTextOcc(annotatedText):
                     temp_occ = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['text']
                     if len(temp_occ.split()) == 1 and self.checkPosTag(sentenceIndex, temp_occ):
                         occ = temp_occ
+                        numberOfSentence = self.getNumberOfSentence() - 1
                         tokenBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['tokenBegin']
+                        tokenEnd = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['tokenEnd']
                         offsetBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetBegin']
                         offsetEnd = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetEnd']
-                        occupationList.append((occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin))
+                        occupationList.append((occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin, tokenEnd, numberOfSentence))
                         
         return occupationList
     
@@ -185,14 +202,69 @@ class annotatedTextOcc(annotatedText):
             occListTemp = self.getOccupation(i)
             if len(occListTemp) > 0:
                 for element in occListTemp:
-                    occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin = element
+                    occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin, tokenEnd, numberOfSentence = element
                     if occ not in occupationDict.keys():
-                        occupationDict[occ] = [(sentenceIndex, tokenBegin, offsetBegin, offsetEnd)]
+                        occupationDict[occ] = [(sentenceIndex, tokenBegin, tokenEnd, offsetBegin, offsetEnd, numberOfSentence)]
                     else:
-                        occupationDict[occ].append((sentenceIndex, tokenBegin, offsetBegin, offsetEnd))
+                        occupationDict[occ].append((sentenceIndex, tokenBegin, tokenEnd, offsetBegin, offsetEnd, numberOfSentence))
             
         return occupationDict
+
+# def generateMutantSentence(at, tokenBegin, offsetBegin, offsetEnd):
+#     text = at.getOriginalText()
+    
+#     beginChunk = text[0:offsetBegin]
+#     endChunk = text[offsetEnd:]
+    
+#     mutantText = beginChunk + '<OCC>' + endChunk
+#     return mutantText
+
+def generateMutantSentence(at, occupation, tokenBegin, tokenEnd, sentenceIndex):
+    annotatedSentence = at.getAnnotatedSentence(sentenceIndex)
+    mutantSentence = ''
+    isDet = at.checkDeterminer(sentenceIndex, tokenBegin)
+    for i in range(len(annotatedSentence['tokens'])):
+        if isDet and i == tokenBegin-1:
+            token = "<DET>"
+        elif i == tokenBegin or annotatedSentence['tokens'][i]['originalText'] == occupation:
+            token = "<OCC>"
+        else:
+            token = annotatedSentence['tokens'][i]['originalText']
+        
+        if token in symbol or token in auxil:
+            mutantSentence = mutantSentence + token
+        else:
+            mutantSentence = mutantSentence + ' ' + token
+    return mutantSentence.strip()
+
+def rearrangeSentence(mutantDict, at):
+    mutantText = ''
+    for i in range(at.getNumberOfSentence()):
+        if i in mutantDict.keys():
+            mutantText = mutantText + ' ' + mutantDict[i]
+        else:
+            mutantText = mutantText + ' ' + at.getSentence(i)
+    return mutantText
+
+def generateMutantText(at):
+    # input:
+        # occupationDict -> dictionary
+    occupationDict = at.getAllOccupation()
+    templateList = []
+    for key in occupationDict.keys():
+        tempMutantDict = {}
+        occurancesList = occupationDict[key]
+        for occurance in occurancesList:
+            sentenceIndex, tokenBegin, tokenEnd, offsetBegin, offsetEnd, numberOfSentence = occurance
+            mutantSentence = generateMutantSentence(at, key, tokenBegin, tokenEnd, sentenceIndex)
             
+            tempMutantDict[sentenceIndex] = mutantSentence
+        mutantText = rearrangeSentence(tempMutantDict, at)   
+        templateList.append(mutantText)
+    return templateList
+            
+
+
 
 test = "John is a fisherman. However, his wife, a teacher, goes to school. John meets with other fisherman today"
 at = annotatedTextOcc(test)
