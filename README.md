@@ -24,6 +24,11 @@ For nlp task, please install thess libraries:
 + neuralcoref
 + fastNLP
 
+For occupation bias, you need StanfordCoreNLP and several libraries:
++ inflect
++ pycorenlp -> [Stackoverflow Guide to serve StanfordCoreNLP as an API](https://stackoverflow.com/questions/32879532/stanford-nlp-for-python)
+
+
 For preparing data from [genderComputer](https://github.com/tue-mdse/genderComputer), please install thess libraries:
 + python-nameparser
 + unidecode
