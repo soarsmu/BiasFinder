@@ -50,8 +50,7 @@ dataset | description
 `asset/imdb/` | We use IMDB movie review dataset downloaded from [Google Drive](https://drive.google.com/drive/u/0/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M) proposed by [Zhang et al. (2015)](https://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf). 
 `asset/gender_associated_word/` | It contains pre-determined values for Gender Associated Words
 `asset/gender_computer/` | It contains a notebook `asset/gender_computer/genderComputer/prepare_male_female_names.ipynb` to prepare the names for **BiasFinder** experiment.
-`asset/occupation/list_XXX/` | It contains pre-determined values for occupation 
-`asset/occupation/exclude_list XXX/` | It contains pre-determined exclude list occupation **Need to be explained why it's excluded**
+`asset/predefined_occupation_list/neutral-occupation.csv/` | It contains pre-determined words for neutral occupations 
 
 
 ### 2) Prepare Google BERT
@@ -139,7 +138,7 @@ Run this command inside the `codes/occupation/` folder
 python main.py
 ```
 
-This code will generate mutant texts for occupation and saved the mutant texts inside a folder `data/biasfinder/occupation/`
+This code will generate mutant texts for occupation and saved the mutant texts inside a folder `data/biasfinder/occupation/`. **Important note:** Occupation bias need StanfordCoreNLP to detect occupation term in the text. Thus please make sure to serve StanfordCoreNLP as an API - [Stackoverflow Guide to serve StanfordCoreNLP as an API](https://stackoverflow.com/questions/32879532/stanford-nlp-for-python).
 
 ### 3) Country-of-origin Bias
 
@@ -256,9 +255,11 @@ Here the final file structure to better know where to put the models and data:
 |   |-- imdb
 |   |   |-- test.csv
 |   |   `-- train.csv
-|   `-- imdb_small
-|       |-- test.csv
-|       `-- train.csv
+|   |-- imdb_small
+|   |   |-- test.csv
+|   |   `-- train.csv
+|   `-- predefined_occupation_list
+|       `-- neutral-occupation.csv 
 |-- codes
 |   |-- country
 |   |   |-- BTC.ipynb
