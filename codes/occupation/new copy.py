@@ -1,28 +1,19 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Aug 29 11:58:39 2020
-
-@author: MSI
-"""
-
-
-import pandas as pd
-
 # df = pd.read_csv("./new/check.csv")
 # # df = df.sample(n = 1000, random_state = 123)
-
 # excludeList = ['director', 'actor', 'actress', 'filmmaker', 'writer', 'artist', 'scriptwriter', 'reviewer', 'commentator', 'slasher']
+
 symbol = ["!","#","$","%","*",",","/",":",";","@","^","_","`","|","~", ".", "?", ")", ">", "~"]
 auxil = ["'m", "'s","'d","'ll","'ve","n't","'re"]
 
-
-from string import punctuation
-from string import digits
+import pandas as pd
 import spacy
+import re
+from spacy.matcher import Matcher
 from pycorenlp import StanfordCoreNLP
-# nlp_wrapper = StanfordCoreNLP('10.4.0.15:9000')
+
 nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
 nlp = spacy.load('en_core_web_sm')
+matcher = Matcher(nlp.vocab)
 
 class annotatedText:
     # Class to represent annotated text resulted from StandfordCoreNLP
@@ -125,8 +116,6 @@ class annotatedTextOcc(annotatedText):
         # output:
             # return a list of unique occupation in a sentence[sentenceIndex] if occupation exist in the sentence, otherwise return empty list
         occ = None
-        offsetBegin = 0
-        offsetEnd = 0
         occupationList = []
         for i in range(self.getNumberOfEntity(sentenceIndex)):
             if len(self.getName(sentenceIndex)) > 0:
@@ -134,12 +123,12 @@ class annotatedTextOcc(annotatedText):
                     temp_occ = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['text']
                     if len(temp_occ.split()) == 1 and self.checkPosTag(sentenceIndex, temp_occ):
                         occ = temp_occ
-                        numberOfSentence = self.getNumberOfSentence() - 1
+                        # numberOfSentence = self.getNumberOfSentence() - 1
                         tokenBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['tokenBegin']
                         tokenEnd = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['tokenEnd']
-                        offsetBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetBegin']
-                        offsetEnd = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetEnd']
-                        occupationList.append((occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin, tokenEnd, numberOfSentence))
+                        # offsetBegin = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetBegin']
+                        # offsetEnd = self.getAnnotatedSentence(sentenceIndex)['entitymentions'][i]['characterOffsetEnd']
+                        occupationList.append((occ, sentenceIndex, tokenBegin, tokenEnd))
                         
         return occupationList
     
@@ -185,16 +174,6 @@ class annotatedTextOcc(annotatedText):
             if self.getAnnotatedSentence(sentenceIndex)['tokens'][i]['originalText'] == token:
                 return i
         return -999
-    
-    def checkDeterminer(self, sentenceIndex, tokenBegin):
-        if tokenBegin != 0:
-            token = self.getAnnotatedSentence(sentenceIndex)['tokens'][tokenBegin-1]['originalText']
-            if token.lower() in ['a', 'an']:
-                return True
-            else:
-                return False
-        else:
-            return False
 
     def getAllOccupation(self):
         occupationDict = {}
@@ -202,40 +181,115 @@ class annotatedTextOcc(annotatedText):
             occListTemp = self.getOccupation(i)
             if len(occListTemp) > 0:
                 for element in occListTemp:
-                    occ, offsetBegin, offsetEnd, sentenceIndex, tokenBegin, tokenEnd, numberOfSentence = element
+                    occ, sentenceIndex, tokenBegin, tokenEnd = element
                     if occ not in occupationDict.keys():
-                        occupationDict[occ] = [(sentenceIndex, tokenBegin, tokenEnd, offsetBegin, offsetEnd, numberOfSentence)]
+                        occupationDict[occ] = [(sentenceIndex, tokenBegin, tokenEnd)]
                     else:
-                        occupationDict[occ].append((sentenceIndex, tokenBegin, tokenEnd, offsetBegin, offsetEnd, numberOfSentence))
+                        occupationDict[occ].append((sentenceIndex, tokenBegin, tokenEnd))
             
         return occupationDict
 
-# def generateMutantSentence(at, tokenBegin, offsetBegin, offsetEnd):
-#     text = at.getOriginalText()
-    
-#     beginChunk = text[0:offsetBegin]
-#     endChunk = text[offsetEnd:]
-    
-#     mutantText = beginChunk + '<OCC>' + endChunk
-#     return mutantText
+def generateMutantText(at):
+    # input:
+        # at -> annotatedText object
+    # output:
+        # templateList -> list of string
 
-def generateMutantSentence(at, occupation, tokenBegin, tokenEnd, sentenceIndex):
-    annotatedSentence = at.getAnnotatedSentence(sentenceIndex)
-    mutantSentence = ''
-    isDet = at.checkDeterminer(sentenceIndex, tokenBegin)
-    for i in range(len(annotatedSentence['tokens'])):
-        if isDet and i == tokenBegin-1:
-            token = "<DET>"
-        elif i == tokenBegin or annotatedSentence['tokens'][i]['originalText'] == occupation:
-            token = "<OCC>"
-        else:
-            token = annotatedSentence['tokens'][i]['originalText']
+    checkedSpan = []
+    occupationDict = at.getAllOccupation()
+    templateList = []
+    for key in occupationDict.keys():
+        tempMutantDict = {}
+        occurancesList = occupationDict[key]
+        for occurance in occurancesList:
+            sentenceIndex, tokenBegin, tokenEnd = occurance
+            mutantSentence, checkedSpan = mutantGenerator(at, key, tokenBegin, tokenEnd, sentenceIndex, checkedSpan)
+            if sentenceIndex not in tempMutantDict.keys():
+                tempMutantDict[sentenceIndex] = mutantSentence
+        mutantText = rearrangeSentence(tempMutantDict, at)   
+        templateList.append(mutantText)
+    return templateList
+
+def mutantGenerator(at, occupation, tokenBegin, tokenEnd, sentenceIndex, checkedSpan):
+    # input:
+        # at -> annotatedText object
+        # occupation -> string
+        # tokenBegin, tokenEnd, sentenceIndex -> integer
+        # checkedSpan -> list of start index (int)
+    # output:
+        # mutantSentence -> string
+    originalSentence = at.getSentence(sentenceIndex)
+    spacyDoc = nlp(originalSentence)
+    occupationSpan, checkedSpan = getOccupationSpan(spacyDoc, occupation, checkedSpan)
+    mutantSentence = generateMutantSentence(spacyDoc, occupationSpan)
+    mutantSentence = re.sub(r'\b' + occupation + r'\b', '<OCC>', mutantSentence)
+    print(mutantSentence)
+    return mutantSentence.strip(), checkedSpan
+
+def getOccupationSpan(spacyDoc, occupation, checkedSpan):
+    # input:
+        # occupation -> string
+        # spacyDoc -> spacy doc
+        # checkedSpan -> list containing start index
+    # output:
+        # span -> spacy span 
+    pattern = [{"LOWER": occupation.lower()}]
+    matcher.add(occupation.lower(), None, pattern)
+
+    span = None
+    match = matcher(spacyDoc)
+    if len(match) > 0:
+        for match_id, start, end in match:
+            if start not in checkedSpan:
+                span = spacyDoc[start:end]
+                if span != None:
+                    checkedSpan.append(start)
+                    break
+    matcher.remove(occupation.lower())
+    return span, checkedSpan
+
+def generateMutantSentence(spacyDoc, occupationSpan):
+    # input:
+        # spacyDoc -> spacy doc
+        # occupationSpan -> spacy span
+    # output:
+        # sentenceAfterDeleteAdj -> string
+    occupationToken = occupationSpan.root
+    sentenceAfterDelAdj = None
+    
+    tempDict = {}
+    tempDict[occupationToken] = occupationToken.i
+    for token in occupationToken.subtree:
+        tempDict[token] = token.i
         
-        if token in symbol or token in auxil:
-            mutantSentence = mutantSentence + token
-        else:
-            mutantSentence = mutantSentence + ' ' + token
-    return mutantSentence.strip()
+    beginSpanStopIndex = min(tempDict.values())
+    endSpanStartIndex = occupationToken.i + 1
+    
+    beginSpan = spacyDoc[0:beginSpanStopIndex].text
+    endSpan = spacyDoc[endSpanStartIndex:].text
+    
+    occString = generatePlaceholder(occupationToken)
+    
+    sentenceAfterDelAdj = '{} {} {}'.format(beginSpan,occString,endSpan).strip()
+    return sentenceAfterDelAdj
+
+def generatePlaceholder(occupationToken):
+    # input:
+        # occupationSpan -> spacy span
+    # output:
+        # repairedOcc -> string
+    
+    repairedOcc = ''
+    for token in occupationToken.children:
+        if token.pos_  == 'DET' and token.i < occupationToken.i:
+            if token.i == (occupationToken.i-1) and token.text.lower() in ['an', 'a']:
+                repairedOcc = repairedOcc + ' ' + ''.join("<DET>")
+            else:
+                repairedOcc = repairedOcc + ' ' + ''.join(token.text)
+
+    repairedOcc = repairedOcc.strip()
+    repairedOcc = '{} {}'.format(repairedOcc, '<OCC>')
+    return repairedOcc.strip()
 
 def rearrangeSentence(mutantDict, at):
     mutantText = ''
@@ -246,27 +300,7 @@ def rearrangeSentence(mutantDict, at):
             mutantText = mutantText + ' ' + at.getSentence(i)
     return mutantText
 
-def generateMutantText(at):
-    # input:
-        # occupationDict -> dictionary
-    occupationDict = at.getAllOccupation()
-    templateList = []
-    for key in occupationDict.keys():
-        tempMutantDict = {}
-        occurancesList = occupationDict[key]
-        for occurance in occurancesList:
-            sentenceIndex, tokenBegin, tokenEnd, offsetBegin, offsetEnd, numberOfSentence = occurance
-            mutantSentence = generateMutantSentence(at, key, tokenBegin, tokenEnd, sentenceIndex)
-            
-            tempMutantDict[sentenceIndex] = mutantSentence
-        mutantText = rearrangeSentence(tempMutantDict, at)   
-        templateList.append(mutantText)
-    return templateList
-            
-
-
-
-test = "John is a fisherman. However, his wife, a teacher, goes to school. John meets with other fisherman today"
+test = "John is a  hard-worker excellent fisherman and he meet with other fisherman today. However, his wife, a teacher, goes to school. John meets with other fisherman today"
 at = annotatedTextOcc(test)
 
     # def getTokenEndSentence(self, sentenceIndex):
