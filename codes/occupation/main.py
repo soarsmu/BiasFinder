@@ -319,7 +319,7 @@ def rearrangeSentence(mutantDict, at):
 #
 
 df = pd.read_csv("./asset/test.csv", encoding="latin1", sep="\t", names=["sentiment", "review"])
-df = df.sample(n = 100, random_state = 12345)
+# df = df.sample(n = 100, random_state = 12345)
 occPlaceholder = pd.read_csv("./asset/neutral-occupation.csv", names=['occupation'])
 occPlaceholderList = occPlaceholder['occupation'].to_list()
 
