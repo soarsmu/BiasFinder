@@ -41,8 +41,6 @@ docker pull pytorch/pytorch:1.2-cuda10.0-cudnn7-devel
 
 ## Setup Dataset and BERT fine-tuning model
 
-This part will tell you the preparation needed. If you don't find any error in this step. You can go to the [end-to-end program](#end-to-end-program). Then read the [Important Resource](#important-resource) and [Technical Report](#technical-report)
-
 ### 1) Prepare the dataset 
 
 dataset | description
