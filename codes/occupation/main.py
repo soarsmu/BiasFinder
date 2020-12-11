@@ -9,7 +9,7 @@ from pycorenlp import StanfordCoreNLP
 symbol = ["!","#","$","%","*",",","/",":",";","@","^","_","`","|","~", ".", "?", ")", ">", "~"]
 auxil = ["'m", "'s","'d","'ll","'ve","n't","'re"]
 nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
-nlp = spacy.load('en_core_web_sm')
+nlp = spacy.load('en_core_web_lg')
 matcher = Matcher(nlp.vocab)
 p = inflect.engine()
 
@@ -326,16 +326,21 @@ occPlaceholderList = occPlaceholder['occupation'].to_list()
 start = time.time()
 mutantTextList = []
 counter = 1
+n_template = 0
 for index, row in df.iterrows():
-    print(f"count: {counter}")
+    if counter % 500 == 0 :
+        print(f"count: {counter}")
+        print(f"template: {n_template}")
+        print()
     counter += 1
     at = annotatedTextOcc(row.review)
     templateList = generateMutantText(at)
     if len(templateList) > 0:
+        n_template += 1
         for template in templateList:
             for occ in occPlaceholderList:
                 mutantText = template.replace("<DET> <OCC>", p.a(occ)).replace("<OCC>", occ)
-                mutantTextList.append((row.sentiment, mutantText, mutantText, template, row.review, occ))
+                mutantTextList.append((row.sentiment, mutantText, template, row.review, occ))
 
 data_dir = "../../data/biasfinder/occupation/"
 if not os.path.exists(data_dir) :
@@ -343,7 +348,7 @@ if not os.path.exists(data_dir) :
 
 if len(mutantTextList) > 0:
     outputDataOcc = pd.DataFrame(mutantTextList)
-    outputDataOcc.columns = ['0', '1', 'mutant', 'template', 'original', 'occupation']
-    outputDataOcc.to_csv(data_dir + "result.csv", index=None, header=None, sep="\t")
+    outputDataOcc.columns = ['label', 'mutant', 'template', 'original', 'occupation']
+    outputDataOcc.to_csv(data_dir + "test.csv", index=None, header=None, sep="\t")
 
 print(time.time() - start)
