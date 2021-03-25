@@ -82,7 +82,7 @@ python fine-tune.py \
   --fine_tune_data_dir ./../../asset/imdb/ \
   --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
   --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json  \
-  --train_batch_size 24 \
+  --train_batch_size 32 \
   --learning_rate 2e-5 \
   --num_train_epochs 5 \
   --seed 42 \
@@ -124,6 +124,16 @@ Run this command inside the `codes/gender/` folder
 
 ```
 python main.py
+```
+
+Some trouble shooting:
+
+* Do not install `neuralcoref` via pip, please build from the source. Check [here](https://github.com/huggingface/neuralcoref).
+
+* You also need to run the following commands if you meet problem `ModuleNotFoundError: No module named 'en_core_web_lg'`.
+
+```
+python -m spacy download en
 ```
 
 This code will generate mutant texts for gender and saved the mutant texts inside a folder `data/biasfinder/gender/`
