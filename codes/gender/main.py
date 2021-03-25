@@ -8,6 +8,31 @@ import time
 
 from utils import preprocessText
 from MutantGeneration import MutantGeneration
+from multiprocessing import Pool, Process, Queue, Manager
+import multiprocessing
+
+
+def compute_mut():
+    '''for multiprocessing uaage'''
+    while True:
+        if not q.empty():
+            label, text = q.get()
+            text = preprocessText(text)
+            mg = MutantGeneration(text)
+
+            if len(mg.getMutants()) > 0:
+                original = [text] * len(mg.getMutants())
+                label = [label] * len(mg.getMutants())
+                template = mg.getTemplates()
+                mutant = mg.getMutants()
+                gender = mg.getGenders()
+                q_to_store.put((
+                    original, label, template, mutant, gender
+                ))
+        else:
+            print("Finished")
+            return
+
 
 df = pd.read_csv("../../asset/imdb/test.csv", names=["label", "sentence"], sep="\t")
 
@@ -31,26 +56,44 @@ countries = []
 
 n_template = 0
 
+
+
 i = 0
 counter = 0
+
+manager = multiprocessing.Manager()
+
+q = manager.Queue()
+q_to_store = manager.Queue()
+
+
 for index, row in df.iterrows():
     label = row["label"]
     text = row["sentence"]
-    text = preprocessText(text)
-    mg = MutantGeneration(text)
-    i += 1
-    if i%500 == 0 : 
-        print("Text processed: ", i)
-        print("Template obtained: ", n_template)
-        print()
-            
-    if len(mg.getMutants()) > 0:
-        n_template += 1
-        originals.extend([text] * len(mg.getMutants()))
-        labels.extend([label] * len(mg.getMutants()))
-        templates.extend(mg.getTemplates())
-        mutants.extend(mg.getMutants())
-        genders.extend(mg.getGenders())
+
+    q.put((label, text))
+
+
+
+numList = []
+for i in range(8) :
+    p = multiprocessing.Process(target=compute_mut, args=())
+    numList.append(p)
+    p.start()
+
+for i in numList:
+    i.join()
+
+print("Generation Process finished.")
+
+while not q_to_store.empty():
+    original, label, template, mutant, gender = q_to_store.get()
+    originals.extend(original)
+    labels.extend(label)
+    templates.extend(template)
+    mutants.extend(mutant)
+    genders.extend(gender)
+
 
 end = time.time()
 print("Execution Time: ", end-start)
