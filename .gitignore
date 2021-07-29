@@ -64,3 +64,5 @@ codes/.ipynb_checkpoints/FNED-FPED-checkpoint.ipynb
 /codes/occupation/prepared/
 /codes/occupation/asset/test.csv
 /codes/occupation/asset/train.csv
+
+/codes/fine-tuning/results/
