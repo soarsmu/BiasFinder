@@ -47,7 +47,7 @@ if __name__ == "__main__" :
     train_labels = list(train_labels)
     val_labels = list(val_labels)
     
-    model_name = "bert-base-cased"
+    model_name = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     # check_data()
@@ -61,14 +61,16 @@ if __name__ == "__main__" :
     
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
+    gpu_id = "gpu1"
+
     training_args = TrainingArguments(
-        output_dir='./results',          # output directory
-        num_train_epochs=5,              # total number of training epochs
+        output_dir=f'./results/{model_name}/{gpu_id}/',          # output directory
+        num_train_epochs=15,              # total number of training epochs
         per_device_train_batch_size=8,  # batch size per device during training
         per_device_eval_batch_size=64,   # batch size for evaluation
         warmup_steps=500,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
-        logging_dir='./logs',            # directory for storing logs
+        logging_dir=f'./logs/{model_name}/{gpu_id}/',            # directory for storing logs
         logging_steps=500,
         learning_rate=5e-5,
         seed=0,
