@@ -35,11 +35,11 @@ if __name__ == "__main__":
         test_texts, truncation=True, padding=True, max_length=512)
     test_dataset = IMDbDataset(test_encodings, test_labels)
 
-    model_name = "./results/checkpoint-8000"
+    model_name = "./results/checkpoint-14000"
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
     # Define test trainer
-    test_trainer = Trainer(model, per_device_eval_batch_size=64)
+    test_trainer = Trainer(model)
 
     # Make prediction
     raw_pred, _, _ = test_trainer.predict(test_dataset)
