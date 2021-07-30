@@ -40,14 +40,19 @@ if __name__ == "__main__" :
     # check_data()
 
     train_texts, val_texts, train_labels, val_labels = train_test_split(
-        train_texts, train_labels, test_size=.1)
+        train_texts, train_labels, test_size=.2)
 
     train_texts = list(train_texts)
     val_texts = list(val_texts)
     train_labels = list(train_labels)
     val_labels = list(val_labels)
     
-    model_name = "bert-base-uncased"
+    model_name = "bert-base-cased"
+    gpu_id = "gpu0"
+
+    # model_name = "bert-base-uncased"
+    # gpu_id = "gpu1"
+    
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     # check_data()
@@ -61,8 +66,7 @@ if __name__ == "__main__" :
     
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-    gpu_id = "gpu1"
-
+    
     training_args = TrainingArguments(
         output_dir=f'./results/{model_name}/{gpu_id}/',          # output directory
         num_train_epochs=15,              # total number of training epochs
@@ -79,15 +83,6 @@ if __name__ == "__main__" :
     )
 
 
-    trainer = Trainer(
-        # the instantiated 🤗 Transformers model to be trained
-        model=model,
-        args=training_args,                  # training arguments, defined above
-        train_dataset=train_dataset,         # training dataset
-        eval_dataset=val_dataset,             # evaluation dataset
-        compute_metrics=compute_metrics,
-    )
-
     # trainer = Trainer(
     #     # the instantiated 🤗 Transformers model to be trained
     #     model=model,
@@ -95,9 +90,18 @@ if __name__ == "__main__" :
     #     train_dataset=train_dataset,         # training dataset
     #     eval_dataset=val_dataset,             # evaluation dataset
     #     compute_metrics=compute_metrics,
-    #     callbacks=[EarlyStoppingCallback(
-    #         early_stopping_patience=10)],
-
     # )
+
+    trainer = Trainer(
+        # the instantiated 🤗 Transformers model to be trained
+        model=model,
+        args=training_args,                  # training arguments, defined above
+        train_dataset=train_dataset,         # training dataset
+        eval_dataset=val_dataset,             # evaluation dataset
+        compute_metrics=compute_metrics,
+        callbacks=[EarlyStoppingCallback(
+            early_stopping_patience=5)],
+
+    )
 
     trainer.train()
