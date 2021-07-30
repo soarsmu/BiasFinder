@@ -35,7 +35,8 @@ if __name__ == "__main__":
         test_texts, truncation=True, padding=True, max_length=512)
     test_dataset = IMDbDataset(test_encodings, test_labels)
 
-    model_name = "./results/checkpoint-14000"
+    model_name = "./results/bert-base-uncased/gpu1/checkpoint-42000"
+    # model_name = "./results/bert-base-cased/gpu0/checkpoint-500"
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
     # Define test trainer
