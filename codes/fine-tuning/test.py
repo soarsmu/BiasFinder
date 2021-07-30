@@ -28,16 +28,20 @@ if __name__ == "__main__":
     test_texts = list(test_texts)
     test_labels = list(test_labels)
 
-    model_name = "bert-base-cased"
+    # model_name = "bert-base-cased"
+    model_name = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     test_encodings = tokenizer(
         test_texts, truncation=True, padding=True, max_length=512)
     test_dataset = IMDbDataset(test_encodings, test_labels)
 
-    model_name = "./results/bert-base-uncased/gpu1/checkpoint-42000"
-    # model_name = "./results/bert-base-cased/gpu0/checkpoint-500"
-    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    if model_name == "bert-base-uncased" :
+        checkpoint_name = "./results/bert-base-uncased/gpu1/checkpoint-42000"
+        # checkpoint_name = "./results/bert-base-uncased/gpu1/checkpoint-2500"
+    elif model_name == "bert-base-cased" :
+        checkpoint_name = "./results/bert-base-cased/gpu0/checkpoint-500"
+    model = AutoModelForSequenceClassification.from_pretrained(checkpoint_name)
 
     # Define test trainer
     test_trainer = Trainer(model)
