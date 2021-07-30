@@ -29,7 +29,9 @@ if __name__ == "__main__":
     test_labels = list(test_labels)
 
     # model_name = "bert-base-cased"
-    model_name = "bert-base-uncased"
+    # model_name = "bert-base-uncased"
+    model_name = "roberta-base"
+    # model_name = "microsoft/deberta-large-mnli"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     test_encodings = tokenizer(
@@ -41,6 +43,8 @@ if __name__ == "__main__":
         # checkpoint_name = "./results/bert-base-uncased/gpu1/checkpoint-2500"
     elif model_name == "bert-base-cased" :
         checkpoint_name = "./results/bert-base-cased/gpu0/checkpoint-500"
+    elif model_name == "roberta-base":
+        checkpoint_name = "./results/roberta-base/gpu1/checkpoint-4000"
     model = AutoModelForSequenceClassification.from_pretrained(checkpoint_name)
 
     # Define test trainer

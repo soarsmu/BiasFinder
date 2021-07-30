@@ -47,11 +47,13 @@ if __name__ == "__main__" :
     train_labels = list(train_labels)
     val_labels = list(val_labels)
     
-    model_name = "bert-base-cased"
-    gpu_id = "gpu0"
+    # model_name = "bert-base-cased"
+    # gpu_id = "gpu0"
 
+    model_name = "roberta-base"
+    # model_name = "microsoft/deberta-large-mnli"
     # model_name = "bert-base-uncased"
-    # gpu_id = "gpu1"
+    gpu_id = "gpu1"
     
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -69,14 +71,14 @@ if __name__ == "__main__" :
     
     training_args = TrainingArguments(
         output_dir=f'./results/{model_name}/{gpu_id}/',          # output directory
-        num_train_epochs=15,              # total number of training epochs
+        num_train_epochs=10,              # total number of training epochs
         per_device_train_batch_size=8,  # batch size per device during training
         per_device_eval_batch_size=64,   # batch size for evaluation
         warmup_steps=500,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
         logging_dir=f'./logs/{model_name}/{gpu_id}/',            # directory for storing logs
         logging_steps=500,
-        learning_rate=5e-5,
+        learning_rate=2e-5,
         seed=0,
         evaluation_strategy="steps",
         load_best_model_at_end=True
