@@ -11,9 +11,11 @@ To address this limitation, we present **BiasFinder**, an approach to discover b
 
 ## Requirements
 
-For fine-tuning SA, we modify some codes from [Xuyige et al](https://arxiv.org/abs/1905.05583) at this Github repository https://github.com/xuyige/BERT4doc-Classification. Xuyige et al. implement the fine-tuning task using pytorch-pretrained-bert package (now well known as transformers). Thus, we need:
+<!-- For fine-tuning SA, we modify some codes from [Xuyige et al](https://arxiv.org/abs/1905.05583) at this Github repository https://github.com/xuyige/BERT4doc-Classification. Xuyige et al. implement the fine-tuning task using pytorch-pretrained-bert package (now well known as transformers). Thus, we need: -->
 
-+ torch>=0.4.1,<=1.2.0 -> currently torch 1.2.0 with cuda 10.0 is used
+<!-- + torch>=0.4.1,<=1.2.0 -> currently torch 1.2.0 with cuda 10.0 is used -->
+
+For fine-tuning SA, we use [HuggingFace](https://huggingface.co) library that provide many pre-trained language models, including BERT, RoBERTa, and XLNET.
 
 For nlp task, please install thess libraries:
 + spacy
@@ -33,10 +35,10 @@ For preparing data from [genderComputer](https://github.com/tue-mdse/genderCompu
 + python-nameparser
 + unidecode
 
-**Tips**: you may use docker for faster implemention on your coding environment. https://hub.docker.com/r/pytorch/pytorch/tags provide several version of PyTorch containers. Please pull the appropiate pytorch container with the tag 1.2 version, using this command.
+**Tips**: you may use docker for faster implemention on your coding environment. https://hub.docker.com/r/pytorch/pytorch/tags provide several version of PyTorch containers. Please pull the appropiate pytorch container with the tag 1.9 version, using this command.
 
 ```
-docker pull pytorch/pytorch:1.2-cuda10.0-cudnn7-devel
+docker pull pytorch/pytorch:1.9.0-cuda10.2-cudnn7-devel
 ```
 
 ## Setup Dataset and BERT fine-tuning model
@@ -58,38 +60,12 @@ Please download [BERT-Base, Uncased](https://storage.googleapis.com/bert_models/
 
 ### 3) Fine-Tune BERT on SA using IMDB
 
-#### Convert BERT Tensforflow checkpoint into PyTorch checkpoint
-
-Run this command inside the `codes/fine-tuning/` folder.
-
-```
-python convert_tf_checkpoint_to_pytorch.py \
-  --tf_checkpoint_path ./../../models/uncased_L-12_H-768_A-12/bert_model.ckpt \
-  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
-  --pytorch_dump_path ./../../models/fine-tuning/pytorch_bert_base_model.bin
-```
-
-Please make sure that folder `models/fine-tuning/` exists.
-
 #### Fine Tune BERT on SA
 
 Run this command inside the `codes/fine-tuning/` folder.
 
 ```
-python fine-tune.py \
-  --task_name binary \
-  --do_lower_case \
-  --fine_tune_data_dir ./../../asset/imdb/ \
-  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
-  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json  \
-  --train_batch_size 32 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 5 \
-  --seed 42 \
-  --layers 11 10 \
-  --trunc_medium -1 \
-  --init_checkpoint ./../../models/fine-tuning/pytorch_bert_base_model.bin \
-  --save_model_dir ./../../models/fine-tuning/pytorch_imdb_fine_tuned/
+bash fine-tune.sh
 ```
 
 **Important Parameter**
@@ -128,12 +104,13 @@ python main.py
 
 Some trouble shooting:
 
-* Do not install `neuralcoref` via pip, please build from the source. Check [here](https://github.com/huggingface/neuralcoref).
+* If you face a problem with `neuralcoref`, please build the library from the source instead of installing using pip. Check [here](https://github.com/huggingface/neuralcoref).
 
 * You also need to run the following commands if you meet problem `ModuleNotFoundError: No module named 'en_core_web_lg'`.
 
 ```
 python -m spacy download en
+python -m spacy download en_core_web_lg
 ```
 
 This code will generate mutant texts for gender and saved the mutant texts inside a folder `data/biasfinder/gender/`
