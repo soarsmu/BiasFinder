@@ -1,0 +1,7 @@
+<person> feels <emotional state word>
+The situation makes <person> feel <emotional state word>
+I made <person> feel <emotional state word>
+<person> made me feel <emotional state word> 
+<person> found himself/herself in a/an <emotional situation word> situation
+<person> told us all about the recent <emotional situation word> events
+The conversation with <person> was <emotional situation word>
