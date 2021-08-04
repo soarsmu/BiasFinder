@@ -17,7 +17,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 from transformers import EarlyStoppingCallback
 
 
-from utils import read_imdb_test, read_imdb_train, IMDbDataset
+from utils import read_imdb_train, read_twitter_train, BiasFinderDataset
 
 
 def compute_metrics(p):
@@ -36,7 +36,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='bert-base-uncased')
     parser.add_argument('--gpu-id', default='gpu0')
-    parser.add_argument('--data-dir', default="./../../asset/imdb/", type=str)
+    parser.add_argument('--task', default="imdb", type=str)
     parser.add_argument('--lr', default=2e-5, type=float)
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--train-bs', default=8, type=int)
@@ -49,9 +49,15 @@ def main() :
 
     args = get_args()
     
-    DATA_DIR = args.data_dir
-
-    train_texts, train_labels = read_imdb_train(DATA_DIR)
+    if args.task ==  "imdb" :
+        data_dir = "./../../asset/imdb/"
+        train_labels, train_texts = read_imdb_train(data_dir)
+    elif args.task == "twitter_semeval":
+        data_dir = "./../../asset/twitter_semeval/"
+        train_labels, train_texts = read_twitter_train(data_dir)
+    elif args.task == "twitter_s140":
+        data_dir = "./../../asset/twitter_s140/"
+        train_labels, train_texts = read_twitter_train(data_dir)
 
     # check_data()
 
@@ -79,23 +85,23 @@ def main() :
     train_encodings = tokenizer(
         train_texts, truncation=True, padding=True, max_length=512)
     val_encodings = tokenizer(
-        val_texts, truncation=True, padding=True, max_length=512)
+        val_texts, truncation=True, padding=True, max_length=512)    
 
-    train_dataset = IMDbDataset(train_encodings, train_labels)
-    val_dataset = IMDbDataset(val_encodings, val_labels)
+    train_dataset = BiasFinderDataset(train_encodings, train_labels)
+    val_dataset = BiasFinderDataset(val_encodings, val_labels)
 
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
     training_args = TrainingArguments(
         # output directory
-        output_dir=f'./results/{model_name}/{gpu_id}/',
+        output_dir=f'./models/{args.task}/{model_name}/{gpu_id}/',
         num_train_epochs=10,              # total number of training epochs
         per_device_train_batch_size=args.train_bs,  # batch size per device during training
         per_device_eval_batch_size=64,   # batch size for evaluation
         warmup_steps=500,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
         # directory for storing logs
-        logging_dir=f'./logs/{model_name}/{gpu_id}/',
+        logging_dir=f'./logs/{args.task}/{model_name}/{gpu_id}/',
         logging_steps=500,
         learning_rate=2e-5,
         seed=0,
