@@ -54,10 +54,10 @@ for _m, _f in zip(masculine_salutation, feminine_salutation) :
     
 
 # load name from gender computer
-gcm = pd.read_csv("../../asset/gender_computer/male_names_only.csv")
+gcm = pd.read_csv("../../asset/gender_computer/male_names_only_USA.csv")
 gcm = gcm.sample(frac=1, random_state=123)
 mnames = gcm["name"].tolist()# # names from GC
-gcf = pd.read_csv("../../asset/gender_computer/female_names_only.csv")
+gcf = pd.read_csv("../../asset/gender_computer/female_names_only_USA.csv")
 gcf = gcf.sample(frac=1, random_state=123)
 fnames = gcf["name"].tolist()# # names from GC
 
