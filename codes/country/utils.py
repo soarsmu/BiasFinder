@@ -126,25 +126,6 @@ def convertParticles(string):
     return string.replace(" 'm", "'m").replace(" 's", "'s").replace(" 'd", "'d").replace(" 've", "'ve").replace(" n't", "n't").replace(" 're", "'re").replace(" - ", "")
 
 
-def combineText(sentenceList):
-    # function to combine string in a list of string
-    # input:
-        # sentenceList -> list
-    # output:
-        # fulltext -> string
-    
-    fulltext = ''
-    for element in sentenceList:
-        tempElement = nlp(element)
-        for token in tempElement:
-            if token.text in symbol:
-                fulltext = fulltext + ''.join(token.text)
-            else:
-                fulltext = fulltext + ' ' + ''.join(token.text)        
-    fulltext = convertParticles(fulltext.strip())
-    return fulltext
-
-
 def restructureText(text):
     # function to combine string in a list of string
     # input:
