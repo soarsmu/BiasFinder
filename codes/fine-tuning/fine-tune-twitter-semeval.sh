@@ -1,0 +1,1 @@
+python fine_tune.py --task twitter_semeval --model bert-base-uncased --gpu-id gpu1 --train-bs 8
