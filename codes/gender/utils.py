@@ -4,6 +4,8 @@ from string import digits
 import pandas as pd
 import numpy as np
 
+from names import mnames, fnames
+
 import neuralcoref
 # import en_core_web_sm
 # nlp = en_core_web_sm.load()
@@ -52,18 +54,6 @@ for _m, _f in zip(masculine_salutation, feminine_salutation) :
     _masculineToFeminineSalutation[_m] = _f
     _feminineToMasculineSalutation[_f] = _m
     
-
-# load name from gender computer
-gcm = pd.read_csv("../../asset/gender_computer/male_names_only_USA.csv")
-gcm = gcm.sample(frac=1, random_state=123)
-mnames = gcm["name"].tolist()# # names from GC
-gcf = pd.read_csv("../../asset/gender_computer/female_names_only_USA.csv")
-gcf = gcf.sample(frac=1, random_state=123)
-fnames = gcf["name"].tolist()# # names from GC
-
-# small name for debugging
-# mnames = ["Alonzo", "Adam"] 
-# fnames = ["Ebony", "Amanda"]
 # mcountries = ["Trial", "Trial"]
 # fcountries = ["Trial", "Trial"]
 
@@ -115,26 +105,6 @@ def convertParticles(string):
         # string -> string
     
     return string.replace(" 'm", "'m").replace(" 's", "'s").replace(" 'd", "'d").replace(" 've", "'ve").replace(" n't", "n't").replace(" 're", "'re").replace(" - ", "")
-
-
-def combineText(sentenceList):
-    # function to combine string in a list of string
-    # input:
-        # sentenceList -> list
-    # output:
-        # fulltext -> string
-    
-    fulltext = ''
-    for element in sentenceList:
-        tempElement = nlp(element)
-        for token in tempElement:
-            if token.text in symbol:
-                fulltext = fulltext + ''.join(token.text)
-            else:
-                fulltext = fulltext + ' ' + ''.join(token.text)        
-    fulltext = convertParticles(fulltext.strip())
-    return fulltext
-
 
 def restructureText(text):
     # function to combine string in a list of string
