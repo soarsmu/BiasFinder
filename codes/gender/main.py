@@ -99,7 +99,8 @@ end = time.time()
 print("Execution Time: ", end-start)
 
 dm = pd.DataFrame(data={"label": labels, "mutant": mutants, "template": templates, "original": originals, "gender": genders})
-dm
+
+dm = dm.drop_duplicates()
 
 dm["template"] = dm["template"].astype("category")
 dm["template_id"] = dm["template"].cat.codes
