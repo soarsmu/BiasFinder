@@ -35,7 +35,6 @@ def compute_metrics(p):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='bert-base-uncased')
-    parser.add_argument('--gpu-id', default='gpu0')
     parser.add_argument('--task', default="imdb", type=str)
     parser.add_argument('--lr', default=2e-5, type=float)
     parser.add_argument('--seed', default=0, type=int)
@@ -70,14 +69,11 @@ def main() :
     val_labels = list(val_labels)
 
     model_name = args.model
-    gpu_id = args.gpu_id
     # model_name = "bert-base-cased"
-    # gpu_id = "gpu0"
     # model_name = "roberta-base"
     # model_name = "microsoft/deberta-large-mnli"
     # model_name = "bert-base-uncased"
-    # gpu_id = "gpu1"
-
+    
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     # check_data()
@@ -94,14 +90,14 @@ def main() :
 
     training_args = TrainingArguments(
         # output directory
-        output_dir=f'./models/{args.task}/{model_name}/{gpu_id}/',
+        output_dir=f'./models/{args.task}/{model_name}/',
         num_train_epochs=10,              # total number of training epochs
         per_device_train_batch_size=args.train_bs,  # batch size per device during training
         per_device_eval_batch_size=64,   # batch size for evaluation
         warmup_steps=500,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
         # directory for storing logs
-        logging_dir=f'./logs/{args.task}/{model_name}/{gpu_id}/',
+        logging_dir=f'./logs/{args.task}/{model_name}/',
         logging_steps=500,
         learning_rate=2e-5,
         seed=0,
