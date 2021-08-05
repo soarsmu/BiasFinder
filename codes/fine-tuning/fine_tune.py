@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument('--task', default="imdb", type=str)
     parser.add_argument('--epochs', default=10, type=int)
     parser.add_argument('--train-bs', default=8, type=int)
-    parser.add_argument('--learning_rate', default=2e-5, type=float)
+    parser.add_argument('--learning-rate', default=2e-5, type=float)
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--warmup-steps', default=500, type=int)
     parser.add_argument('--logging-steps', default=500, type=int)
