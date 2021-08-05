@@ -32,7 +32,7 @@ def read_twitter_test(data_dir):
     return df[0].values, df[1].values
 
 
-class BiasFinderDataset(torch.utils.data.Dataset):
+class CustomDataset(torch.utils.data.Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
         self.labels = labels

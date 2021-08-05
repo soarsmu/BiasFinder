@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from torch.utils.data import DataLoader
 
-from utils import read_imdb_test, read_twitter_test, BiasFinderDataset
+from utils import read_imdb_test, read_twitter_test, CustomDataset
 
 
 def get_args():
@@ -71,7 +71,7 @@ def predict():
 
     test_encodings = tokenizer(
         test_texts, truncation=True, padding=True, max_length=512)
-    test_dataset = BiasFinderDataset(test_encodings, test_labels)
+    test_dataset = CustomDataset(test_encodings, test_labels)
 
     checkpoint_dir = f"./models/{args.task}/{args.model}/"
     best_checkpoint = find_best_checkpoint(checkpoint_dir)
@@ -89,7 +89,7 @@ def predict():
 
     if not os.path.exists(os.path.join(data_dir, "predictions/")):
         os.makedirs(os.path.join(data_dir, "predictions/"))
-        
+
     fpath = os.path.join(data_dir, f"predictions/{args.model}.pkl")
 
     with open(fpath, 'wb') as f:

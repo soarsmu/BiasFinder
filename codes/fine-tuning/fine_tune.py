@@ -17,7 +17,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 from transformers import EarlyStoppingCallback
 
 
-from utils import read_imdb_train, read_twitter_train, BiasFinderDataset
+from utils import read_imdb_train, read_twitter_train, CustomDataset
 
 
 def compute_metrics(p):
@@ -86,8 +86,8 @@ def main() :
     val_encodings = tokenizer(
         val_texts, truncation=True, padding=True, max_length=512)    
 
-    train_dataset = BiasFinderDataset(train_encodings, train_labels)
-    val_dataset = BiasFinderDataset(val_encodings, val_labels)
+    train_dataset = CustomDataset(train_encodings, train_labels)
+    val_dataset = CustomDataset(val_encodings, val_labels)
 
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
