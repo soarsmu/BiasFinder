@@ -102,6 +102,7 @@ def main() :
         learning_rate=2e-5,
         seed=0,
         evaluation_strategy="steps",
+        save_total_limit=5,
         load_best_model_at_end=True
     )
 
