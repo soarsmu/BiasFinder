@@ -65,4 +65,8 @@ codes/.ipynb_checkpoints/FNED-FPED-checkpoint.ipynb
 /codes/occupation/asset/test.csv
 /codes/occupation/asset/train.csv
 
-/codes/fine-tuning/results/
+/codes/fine-tuning/models/
+
+
+/asset/twitter_semeval/
+/asset/twitter_s140/
