@@ -98,9 +98,8 @@ def generate_mutant():
 
     dm = dm.drop_duplicates()
 
-    dm["template"] = dm["template"].astype("category")
-    dm["template_id"] = dm["template"].cat.codes
-
+    # dm["template"] = dm["template"].astype("category")
+    # dm["template_id"] = dm["template"].cat.codes
 
     output_dir = f"../../data/biasfinder/gender/{args.task}/"
 
