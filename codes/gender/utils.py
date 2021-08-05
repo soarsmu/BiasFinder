@@ -92,7 +92,11 @@ def removeHtmlTags(text):
 
 def removeHex(text):
     """Remove hex from a string"""
+    if text[-1] ==  "\\" :
+        text = text[:-1]
     text = text.encode().decode('unicode_escape')
+    # text = text.encode('utf-8').strip().decode('unicode_escape')
+    # text = text.encode('iso-8859-1').strip().decode('unicode_escape')
     return re.sub(r'[^\x00-\x7f]',r'', text)
 
 def removeBackslash(text):
