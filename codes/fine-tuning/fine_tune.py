@@ -36,9 +36,12 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='bert-base-uncased')
     parser.add_argument('--task', default="imdb", type=str)
-    parser.add_argument('--lr', default=2e-5, type=float)
-    parser.add_argument('--seed', default=0, type=int)
+    parser.add_argument('--epochs', default=10, type=int)
     parser.add_argument('--train-bs', default=8, type=int)
+    parser.add_argument('--learning_rate', default=2e-5, type=float)
+    parser.add_argument('--seed', default=0, type=int)
+    parser.add_argument('--warmup-steps', default=500, type=int)
+    parser.add_argument('--logging-steps', default=500, type=int)
     parser.add_argument('--weight-decay', default=0.01, type=float)
 
     return parser.parse_args()
@@ -91,15 +94,15 @@ def main() :
     training_args = TrainingArguments(
         # output directory
         output_dir=f'./models/{args.task}/{model_name}/',
-        num_train_epochs=10,              # total number of training epochs
+        num_train_epochs=args.epochs,              # total number of training epochs
         per_device_train_batch_size=args.train_bs,  # batch size per device during training
         per_device_eval_batch_size=64,   # batch size for evaluation
-        warmup_steps=500,                # number of warmup steps for learning rate scheduler
-        weight_decay=0.01,               # strength of weight decay
+        warmup_steps=args.warmup_steps,                # number of warmup steps for learning rate scheduler
+        weight_decay=args.weight_decay,               # strength of weight decay
         # directory for storing logs
         logging_dir=f'./logs/{args.task}/{model_name}/',
-        logging_steps=500,
-        learning_rate=2e-5,
+        logging_steps=args.logging_steps,
+        learning_rate=args.learning_rate,
         seed=0,
         evaluation_strategy="steps",
         save_total_limit=5,
@@ -123,7 +126,7 @@ def main() :
         eval_dataset=val_dataset,             # evaluation dataset
         compute_metrics=compute_metrics,
         callbacks=[EarlyStoppingCallback(
-            early_stopping_patience=5)],
+            early_stopping_patience=7)],
 
     )
 
