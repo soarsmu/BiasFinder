@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 import pickle
 from tqdm import tqdm
-
+import json
 
 import torch
 from sklearn.model_selection import train_test_split
@@ -25,16 +25,39 @@ def get_args():
 
     return parser.parse_args()
 
+
+def find_best_checkpoint(checkpoint_dir):
+    """
+    Find the best checkpoint in the directory
+    :param checkpoint_dir: dir where the checkpoints are being saved.
+    :return: the checkpoint where it achieve lowest loss
+    """
+    ckpt_files = os.listdir(checkpoint_dir)  # list of strings
+    steps = [int(filename[11:])
+            for filename in ckpt_files]  # 'epoch={int}.ckpt' filename format
+    print(steps)
+    last_step = max(steps)
+    training_state_fpath = os.path.join(checkpoint_dir, f"checkpoint-{last_step}/trainer_state.json")
+
+    f = open(training_state_fpath,)  # Opening JSON file
+    data = json.load(f)  # returns JSON object as a dictionary
+    
+    return data["best_model_checkpoint"]
+
+
+
 def predict():
 
     args = get_args()
 
-
     data_dir = f"./../../data/{args.mutation_tool}/{args.bias_type}/{args.mutant}/"
 
-
-    # test_labels, test_texts  = read_imdb_test(data_dir)
-    test_labels, test_texts = read_twitter_test(data_dir)
+    if args.mutant == "imdb" :
+        test_labels, test_texts  = read_imdb_test(data_dir)
+    elif args.mutant == "twitter_semeval" or args.mutant == "twitter_s140" :
+        test_labels, test_texts = read_twitter_test(data_dir)
+    else :
+        raise ValueError("Unknown dataset used for generating mutants")
 
     # test_texts = list(test_texts)[:1000]
     # test_labels = list(test_labels)[:1000]
@@ -44,36 +67,18 @@ def predict():
 
 
     model_name = args.model
-    # model_name = "bert-base-uncased"
-    # model_name = "bert-base-cased"
-    # model_name = "roberta-base"
-    # model_name = "microsoft/deberta-large-mnli"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     test_encodings = tokenizer(
         test_texts, truncation=True, padding=True, max_length=512)
     test_dataset = BiasFinderDataset(test_encodings, test_labels)
 
-    base_checkpoint = f"./models/{args.task}/{args.model}/"
-    if args.task == "imdb" :
-        if model_name == "bert-base-uncased" :
-            checkpoint_name = base_checkpoint + "gpu1/checkpoint-2000"
-            # checkpoint_name = "./models/twitter_semeval/bert-base-uncased/gpu1/checkpoint-500"
-        elif model_name == "bert-base-cased" :
-            checkpoint_name = "./results/bert-base-cased/gpu0/checkpoint-2000"
-        elif model_name == "roberta-base":
-            checkpoint_name = "./results/roberta-base/gpu1/checkpoint-4000"
-    elif args.task == "twitter_semeval" :
-        if model_name == "bert-base-uncased":
-            checkpoint_name = base_checkpoint + "gpu1/checkpoint-500"
+    checkpoint_dir = f"./models/{args.task}/{args.model}/"
+    best_checkpoint = find_best_checkpoint(checkpoint_dir)
 
-    model = AutoModelForSequenceClassification.from_pretrained(checkpoint_name)
+    model = AutoModelForSequenceClassification.from_pretrained(best_checkpoint)
 
-    # Define test trainer
     test_trainer = Trainer(model)
-
-    # Make prediction
-    # raw_pred, _, _ = test_trainer.predict(test_dataset)
     
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
     raw_pred, _, _ = test_trainer.prediction_loop(
@@ -82,8 +87,10 @@ def predict():
     # Preprocess raw predictions
     y_pred = np.argmax(raw_pred, axis=1)
 
-
-    fpath = os.path.join(data_dir, "prediction.pkl")
+    if not os.path.exists(os.path.join(data_dir, "predictions/")):
+        os.makedirs(os.path.join(data_dir, "predictions/"))
+        
+    fpath = os.path.join(data_dir, f"predictions/{args.model}.pkl")
 
     with open(fpath, 'wb') as f:
         pickle.dump(y_pred, f)
