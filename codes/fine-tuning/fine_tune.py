@@ -36,6 +36,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='bert-base-uncased')
     parser.add_argument('--task', default="imdb", type=str)
+    parser.add_argument('--test-size', default=0.4, type=float)
     parser.add_argument('--epochs', default=10, type=int)
     parser.add_argument('--train-bs', default=8, type=int)
     parser.add_argument('--learning-rate', default=2e-5, type=float)
@@ -64,7 +65,7 @@ def main() :
     # check_data()
 
     train_texts, val_texts, train_labels, val_labels = train_test_split(
-        train_texts, train_labels, test_size=.4)
+        train_texts, train_labels, test_size=args.test_size)
     
     ## IF HAVE MUCH TIME, try to increase test size because the fine-tuning run fast
 
