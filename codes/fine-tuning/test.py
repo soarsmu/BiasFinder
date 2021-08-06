@@ -58,9 +58,12 @@ def find_best_checkpoint(checkpoint_dir):
     return data["best_model_checkpoint"]
 
 
-def predict():
+def test():
+    print("=== Test ===")
 
     args = get_args()
+    print(args)
+
 
     data_dir = f"./../../asset/{args.dataset}/"
 
@@ -113,4 +116,4 @@ def predict():
 
 
 if __name__ == "__main__":
-    predict()
+    test()

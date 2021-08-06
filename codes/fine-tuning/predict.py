@@ -48,8 +48,9 @@ def find_best_checkpoint(checkpoint_dir):
 
 
 def predict():
-
+    print("=== Predict ===")
     args = get_args()
+    print(args)
 
     data_dir = f"./../../data/{args.mutation_tool}/{args.bias_type}/{args.mutant}/"
 

@@ -48,9 +48,12 @@ def get_args():
     return parser.parse_args()
     
 
-def main() :
+def fine_tune() :
+
+    print("=== Fine-tune ===")
 
     args = get_args()
+    print(args)
     
     if args.task ==  "imdb" :
         data_dir = "./../../asset/imdb/"
@@ -137,5 +140,4 @@ def main() :
 
 
 if __name__ == "__main__" :
-    main()
-
+    fine_tune()
