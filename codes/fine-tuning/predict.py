@@ -60,8 +60,8 @@ def predict():
     else :
         raise ValueError("Unknown dataset used for generating mutants")
 
-    # test_texts = list(test_texts)[:1000]
-    # test_labels = list(test_labels)[:1000]
+    # test_texts = list(test_texts)[:100]
+    # test_labels = list(test_labels)[:100]
 
     test_texts = list(test_texts)
     test_labels = list(test_labels)
@@ -89,7 +89,10 @@ def predict():
     y_pred = np.argmax(raw_pred, axis=1)
 
     fpath = os.path.join(data_dir, f"predictions/{args.model}.pkl")
-    Path(fpath).mkdir(parents=True, exist_ok=True)
+    
+    parent_dir = "/".join(str(fpath).split('/')[:-1])
+    if not os.path.exists(parent_dir) :
+        os.makedirs(parent_dir)
 
     with open(fpath, 'wb') as f:
         pickle.dump(y_pred, f)
