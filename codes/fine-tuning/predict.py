@@ -5,6 +5,7 @@ import argparse
 import pickle
 from tqdm import tqdm
 import json
+from pathlib import Path
 
 import torch
 from sklearn.model_selection import train_test_split
@@ -35,7 +36,7 @@ def find_best_checkpoint(checkpoint_dir):
     ckpt_files = os.listdir(checkpoint_dir)  # list of strings
     steps = [int(filename[11:])
             for filename in ckpt_files]  # 'epoch={int}.ckpt' filename format
-    print(steps)
+    # print(steps)
     last_step = max(steps)
     training_state_fpath = os.path.join(checkpoint_dir, f"checkpoint-{last_step}/trainer_state.json")
 
@@ -87,10 +88,8 @@ def predict():
     # Preprocess raw predictions
     y_pred = np.argmax(raw_pred, axis=1)
 
-    if not os.path.exists(os.path.join(data_dir, "predictions/")):
-        os.makedirs(os.path.join(data_dir, "predictions/"))
-
     fpath = os.path.join(data_dir, f"predictions/{args.model}.pkl")
+    Path(fpath).mkdir(parents=True, exist_ok=True)
 
     with open(fpath, 'wb') as f:
         pickle.dump(y_pred, f)
