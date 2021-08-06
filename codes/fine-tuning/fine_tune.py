@@ -64,7 +64,9 @@ def main() :
     # check_data()
 
     train_texts, val_texts, train_labels, val_labels = train_test_split(
-        train_texts, train_labels, test_size=.2)
+        train_texts, train_labels, test_size=.4)
+    
+    ## IF HAVE MUCH TIME, try to increase test size because the fine-tuning run fast
 
     train_texts = list(train_texts)
     val_texts = list(val_texts)
