@@ -77,4 +77,7 @@ for index,row in templates_df.iterrows():
 df.to_csv('../../data/eec/gender/twitter_semeval/test.csv',
           header=None, index=None, sep='\t')
 
+df.to_csv('../../data/eec/gender/twitter_s140/test.csv',
+          header=None, index=None, sep='\t')
+
 
