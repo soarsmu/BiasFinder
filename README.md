@@ -18,7 +18,7 @@ To address this limitation, we present **BiasFinder**, an approach to discover b
 For fine-tuning SA, we use [HuggingFace](https://huggingface.co) library that provide many pre-trained language models, including BERT, RoBERTa, and XLNET.
 
 For nlp task, please install thess libraries:
-+ spacy
++ spacy (need `en_core_web_lg`)
 + pandas
 + numpy
 + scikit-learn
@@ -40,6 +40,7 @@ For preparing data from [genderComputer](https://github.com/tue-mdse/genderCompu
 ```
 docker pull pytorch/pytorch:1.9.0-cuda10.2-cudnn7-devel
 ```
+
 
 ## Setup Dataset and BERT fine-tuning model
 
