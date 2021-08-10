@@ -29,7 +29,7 @@ def generate_mutant():
             if not q.empty():
                 label, text = q.get()
                 text = preprocessText(text)
-                mg = MutantGeneration(text)
+                mg = GenderMutantGeneration(text)
 
                 if len(mg.getMutants()) > 0:
                     original = [text] * len(mg.getMutants())
