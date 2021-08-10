@@ -3,15 +3,16 @@ import numpy as np
 import math
 import spacy
 import os
+import sys
 
 import time
 
+sys.path.insert(1, "../module/")
 from utils import preprocessText
 from CountryMutantGeneration import CountryMutantGeneration
 
 df = pd.read_csv("../../asset/imdb/test.csv", names=["label", "original"], sep="\t")
-
-# df = pd.read_csv("../../data/biasfinder/template_gender.csv")
+df = df.drop_duplicates()
 
 start = time.time()
 
@@ -31,9 +32,9 @@ for index, row in df[:100].iterrows():
     text = preprocessText(text)
     mg = CountryMutantGeneration(text)
     i += 1
-    if i%20 == 0 : 
-        print(i)
-        print(n_template)
+    # if i%20 == 0 : 
+    #     print(i)
+    #     print(n_template)
             
     if len(mg.getMutants()) > 0: 
         n_template += 1
@@ -48,10 +49,8 @@ end = time.time()
 print("Execution Time: ", end-start)
 
 dm = pd.DataFrame(data={"label": labels, "mutant": mutants, "template": templates, "original": originals, "names": names, "countries": countries})
-dm
+dm = dm.drop_duplicates()
 
-dm["template"] = dm["template"].astype("category")
-dm["template_id"] = dm["template"].cat.codes
 
 data_dir = "../../data/biasfinder/country/"
 

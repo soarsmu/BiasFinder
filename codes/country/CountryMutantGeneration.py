@@ -1,12 +1,15 @@
+import sys
 import re
 import pandas as pd
 
-from utils import NAME, PRONOUN, GAW, SALUTATION
+sys.path.insert(1, "../module/")
+
 
 from Entity import Entity
 from Phrase import Phrase
 from Coreference import Coreference
 from utils import nlp
+from utils import NAME, PRONOUN, GAW, SALUTATION
 from utils import tag, preprocessText
 from utils import getPronounPlaceholders
 from utils import masculineToFemininePronoun

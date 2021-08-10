@@ -1,7 +1,10 @@
+import sys
 import re
 import pandas as pd
 
 from utils import NAME, PRONOUN, GAW, SALUTATION
+
+sys.path.insert(1, "../module/")
 
 from Entity import Entity
 from Phrase import Phrase
@@ -16,7 +19,7 @@ from utils import feminineToMasculineSalutation
 from utils import getMaleNamesFromGenderComputer, getFemaleNamesFromGenderComputer
 from utils import getMasculineGenderAssociatedWord, getFeminineGenderAssociatedWord 
 
-class MutantGeneration:
+class GenderMutantGeneration:
     original = ""
     coreferences = []
     person_entities = []

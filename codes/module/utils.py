@@ -4,6 +4,8 @@ from string import digits
 import pandas as pd
 import numpy as np
 
+from gender_names import mnames, fnames
+
 import neuralcoref
 # import en_core_web_sm
 # nlp = en_core_web_sm.load()
@@ -52,23 +54,6 @@ for _m, _f in zip(masculine_salutation, feminine_salutation) :
     _masculineToFeminineSalutation[_m] = _f
     _feminineToMasculineSalutation[_f] = _m
     
-
-# load name from gender computer
-gcm = pd.read_csv("../../asset/gender_computer/male_names_only.csv")
-gcm = gcm.sample(frac=1, random_state=123)
-mnames = gcm["name"].tolist()# # names from GC
-gcf = pd.read_csv("../../asset/gender_computer/female_names_only.csv")
-gcf = gcf.sample(frac=1, random_state=123)
-fnames = gcf["name"].tolist()# # names from GC
-
-# small name for debugging
-# mnames = ["Alonzo", "Adam"] 
-# fnames = ["Ebony", "Amanda"]
-# mcountries = ["Trial", "Trial"]
-# fcountries = ["Trial", "Trial"]
-
-# countries = mcountries.copy()
-# countries.extend(fcountries)
 male_country = pd.read_csv("../../asset/gender_computer/unique_male_names_and_country.csv")
 female_country = pd.read_csv("../../asset/gender_computer/unique_female_names_and_country.csv")
 
@@ -103,7 +88,6 @@ def getFeminineGenderAssociatedWord() :
     return feminine_gaw
 
 
-
 def removeHtmlTags(text):
     """Remove html tags from a string"""
     clean = re.compile('<.*?>')
@@ -111,7 +95,11 @@ def removeHtmlTags(text):
 
 def removeHex(text):
     """Remove hex from a string"""
+    if text[-1] ==  "\\" :
+        text = text[:-1]
     text = text.encode().decode('unicode_escape')
+    # text = text.encode('utf-8').strip().decode('unicode_escape')
+    # text = text.encode('iso-8859-1').strip().decode('unicode_escape')
     return re.sub(r'[^\x00-\x7f]',r'', text)
 
 def removeBackslash(text):
@@ -124,7 +112,6 @@ def convertParticles(string):
         # string -> string
     
     return string.replace(" 'm", "'m").replace(" 's", "'s").replace(" 'd", "'d").replace(" 've", "'ve").replace(" n't", "n't").replace(" 're", "'re").replace(" - ", "")
-
 
 def restructureText(text):
     # function to combine string in a list of string

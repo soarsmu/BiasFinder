@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 import os
 import argparse
+import sys
 
 import time
 
+sys.path.insert(1, "../module/")
 from utils import preprocessText
-from MutantGeneration import MutantGeneration
+from GenderMutantGeneration import GenderMutantGeneration
 from multiprocessing import Pool, Process, Queue, Manager
 import multiprocessing
 
