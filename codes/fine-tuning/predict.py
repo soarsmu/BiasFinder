@@ -6,6 +6,7 @@ import pickle
 from tqdm import tqdm
 import json
 from pathlib import Path
+import sys
 
 import torch
 from sklearn.model_selection import train_test_split
@@ -62,6 +63,39 @@ def generate_original_data(data_dir, mutation_tool):
     ori_df.to_csv(data_dir + "original.csv",
                    index=None, header=None, sep="\t")
 
+def batch_tokenizer(tokenizer, test_texts, batch_size=5000):
+
+    n = len(test_texts)
+    i = 0 
+    lb = i * batch_size # lower bound
+    ub = (i+1) * batch_size # upper bound
+    
+    input_ids = None
+    token_type_ids = None
+    attention_mask = None
+    while lb < n :
+        curr_test_encodings = tokenizer(test_texts[lb:ub], truncation=True, padding=True, max_length=512)
+        if str(type(input_ids)) == "<class 'numpy.ndarray'>":
+            input_ids = np.concatenate((input_ids, curr_test_encodings['input_ids']), axis=0)
+            token_type_ids = np.concatenate((token_type_ids, curr_test_encodings['token_type_ids']), axis=0)
+            attention_mask = np.concatenate((attention_mask, curr_test_encodings['attention_mask']), axis=0)
+        else :
+            input_ids = np.array(curr_test_encodings['input_ids'])
+            token_type_ids = np.array(curr_test_encodings['token_type_ids'])
+            attention_mask = np.array(curr_test_encodings['attention_mask'])
+            
+        i += 1
+        lb = i * batch_size  # lower bound
+        ub = (i+1) * batch_size  # upper bound
+
+        if ub > n :
+            ub = n
+    
+    return {'input_ids': input_ids, 
+            'token_type_ids': token_type_ids, 
+            'attention_mask': attention_mask}
+
+
 def predict():
     print("=== Predict ===")
     args = get_args()
@@ -97,9 +131,14 @@ def predict():
     model_name = args.model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    test_encodings = tokenizer(
-        test_texts, truncation=True, padding=True, max_length=512)
+    test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
+
+    # print(len(test_encodings))
+    # print(len(test_labels))
+    # assert len(test_encodings) == len(test_labels)
     test_dataset = CustomDataset(test_encodings, test_labels)
+
+    print("passed")
 
     checkpoint_dir = f"./models/{args.task}/{args.model}/"
     best_checkpoint = find_best_checkpoint(checkpoint_dir)
