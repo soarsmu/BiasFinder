@@ -82,3 +82,13 @@ def evaluate_btc(labels, predictions, mutants, templates, identifier, identifier
     # print("Execution time: ", execution_time)
 
     return {"template": len(dft), "mutant": len(df), "btc": int(dft["btc"].sum())}
+
+
+def evaluate_fairness_violation(predictions, original_predictions) :
+    df = pd.DataFrame(
+            data={
+                "prediction": list(predictions), 
+                "original_prediction": list(original_predictions)})
+    return sum(df["prediction"] != df["original_prediction"])
+
+
