@@ -131,14 +131,12 @@ def predict():
     model_name = args.model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
+    if args.bias_type == "occupation" and args.type == "mutant":
+        test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
+    else :
+        test_encodings = tokenizer(test_texts, truncation=True, padding=True, max_length=512)
 
-    # print(len(test_encodings))
-    # print(len(test_labels))
-    # assert len(test_encodings) == len(test_labels)
     test_dataset = CustomDataset(test_encodings, test_labels)
-
-    print("passed")
 
     checkpoint_dir = f"./models/{args.task}/{args.model}/"
     best_checkpoint = find_best_checkpoint(checkpoint_dir)
