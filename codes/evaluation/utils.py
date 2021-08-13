@@ -1,6 +1,7 @@
 import os
 import pickle
 import pandas as pd 
+import numpy as np
 
 def load_pickle(fpath):
     with open(fpath, 'rb') as f:
@@ -22,6 +23,19 @@ def calculate_test_accuracy(task, model):
     predicitons = load_pickle(pred_path)
 
     return accuracy(test_labels, predicitons)
+
+
+def calculate_pearson_correlation(task, model) :
+    label_path = f"../../asset/{task}/test.csv"
+    pred_path = f"../../asset/{task}/predictions/{model}.pkl"
+
+    test_df = pd.read_csv(label_path, header=None, sep="\t")
+
+    test_labels = test_df[0].values
+    predicitons = load_pickle(pred_path)
+
+    return np.corrcoef(test_labels, predicitons)
+
 
 
 def load_original_prediction(mutation_tool, model, bias_type, mutant):
@@ -58,14 +72,15 @@ def load_mutant_and_prediction(mutation_tool, model, bias_type, mutant):
 
     df["prediction"] = load_pickle(mutant_prediction_fpath)
 
-    ori_df = load_original_prediction(mutation_tool, model, bias_type, mutant)
-    ori2prediction = {}
-    for index, row in ori_df.iterrows():
-        prediction = row["prediction"]
-        text = row["original"]
-        ori2prediction[text] = prediction
+    if mutation_tool == "biasfinder" or mutation_tool == "mtnlp" :
+        ori_df = load_original_prediction(mutation_tool, model, bias_type, mutant)
+        ori2prediction = {}
+        for index, row in ori_df.iterrows():
+            prediction = row["prediction"]
+            text = row["original"]
+            ori2prediction[text] = prediction
 
-    df["original_prediction"] = df["original"].apply(
-        lambda text: ori2prediction[text])
+        df["original_prediction"] = df["original"].apply(
+            lambda text: ori2prediction[text])
 
     return df
