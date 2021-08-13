@@ -69,6 +69,25 @@ def batch_tokenizer(tokenizer, test_texts, batch_size=5000):
     i = 0 
     lb = i * batch_size # lower bound
     ub = (i+1) * batch_size # upper bound
+
+    ## TODO: 
+    ## token_type_ids does not works on several models
+    ## try to use key value
+    # == = Predict == =
+    # Namespace(batch_size=16, bias_type='country', model='microsoft/mpnet-base',
+    #           mutant='imdb', mutation_tool='biasfinder', task='imdb', type='original')
+    # Traceback(most recent call last):
+    #   File "predict.py", line 163, in <module >
+    #   predict()
+    #   File "predict.py", line 134, in predict
+    #   test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
+    #   File "predict.py", line 84, in batch_tokenizer
+    #   token_type_ids = np.array(curr_test_encodings['token_type_ids'])
+    #   File "/opt/conda/lib/python3.7/site-packages/transformers/tokenization_utils_base.py", line 237, in __getitem__
+    #   return self.data[item]
+    # KeyError: 'token_type_ids'
+    # facebook/muppet-roberta-base
+    # roberta-base
     
     input_ids = None
     token_type_ids = None
