@@ -17,34 +17,26 @@ def evaluate_btc(labels, predictions, mutants, templates, identifier, identifier
 
     start = time.time()
 
-    mutant_example = []
     mutant_prediction_stat = []
     key = []
     for i in range(len(gb.size())):
         data = gb.get_group(i)
         dc = data.groupby(identifier)
-        me = {}  # mutant example
         mp = {}  # mutant prediction
         key = []
         for k, v in dict(iter(dc)).items():
             key.append(k)
-            is_first_instance = True
             pos_counter = 0  # positive counter
             neg_counter = 0  # negative counter
             for m, p in zip(v["mutant"].values, v["prediction"].values):
-                if is_first_instance:
-                    me[k] = m
-                    is_first_instance = False
                 if int(p) == 1:
                     pos_counter += 1
                 else:
                     neg_counter += 1
             mp[k] = {"pos": pos_counter, "neg": neg_counter}
 
-        mutant_example.append(me)
         mutant_prediction_stat.append(mp)
 
-    dft["mutant_example"] = mutant_example
     dft["mutant_prediction_stat"] = mutant_prediction_stat
 
     btcs = []
