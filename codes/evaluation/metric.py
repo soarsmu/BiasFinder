@@ -35,6 +35,11 @@ def evaluate_btc(labels, predictions, mutants, templates, identifier, identifier
                     neg_counter += 1
             mp[k] = {"pos": pos_counter, "neg": neg_counter}
 
+            if identifier == "gender":
+                for gender_group in ["male", "female"] :
+                    if gender_group not in mp.keys() :
+                        mp[gender_group] = {"pos": 0, "neg" : 0}
+
         mutant_prediction_stat.append(mp)
 
     dft["mutant_prediction_stat"] = mutant_prediction_stat
