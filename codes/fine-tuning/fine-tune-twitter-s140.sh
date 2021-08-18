@@ -5,10 +5,12 @@ for model in ${models[@]}; do
     python fine_tune.py \
         --task twitter_s140 \
         --test-size 0.02 \
-        --model bert-base-uncased \
+        --model $model \
         --epochs 30 \
         --learning-rate 1e-5 \
         --train-bs 32 \
-        --warmup-steps 100 \
-        --logging-steps 100
+        --warmup-steps 200 \
+        --logging-steps 200 \
+        --eval-steps 200 \
+        --save-steps 200 
 done
