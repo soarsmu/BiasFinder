@@ -56,16 +56,17 @@ def load_mutant_and_prediction(mutation_tool, model, bias_type, mutant):
         headers = ["label", "mutant", "template",
                    "original", "person", "gender", "emotion"]
     elif mutation_tool == "mtnlp":
-        headers = ["label", "mutant", "original", "mutation_type"]
+        headers = ["label", "mutant", "original",
+                   "template", "gender", "mutation_type"]
     else:
         raise ValueError("Unknown mutation tool")
 
     df = pd.read_csv(base_dir + "test.csv", header=None,
                      sep="\t", names=headers)
 
-    if mutation_tool == "biasfinder" or mutation_tool == "eec":
-        df["template"] = df["template"].astype("category")
-        df["template_id"] = df["template"].cat.codes
+    # if mutation_tool == "biasfinder" or mutation_tool == "eec":
+    df["template"] = df["template"].astype("category")
+    df["template_id"] = df["template"].cat.codes
 
     mutant_prediction_fpath = os.path.join(
         base_dir, f"mutant-predictions/{model}.pkl")
