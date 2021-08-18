@@ -43,6 +43,8 @@ def get_args():
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--warmup-steps', default=500, type=int)
     parser.add_argument('--logging-steps', default=500, type=int)
+    parser.add_argument('--eval-steps', default=500, type=int)
+    parser.add_argument('--save-steps', default=500, type=int)
     parser.add_argument('--weight-decay', default=0.01, type=float)
 
     return parser.parse_args()
@@ -111,7 +113,9 @@ def fine_tune() :
         learning_rate=args.learning_rate,
         seed=0,
         evaluation_strategy="steps",
+        eval_steps=args.eval_steps, 
         save_total_limit=5,
+        save_steps=args.save_steps,
         load_best_model_at_end=True
     )
 
