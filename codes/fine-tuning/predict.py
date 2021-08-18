@@ -55,7 +55,8 @@ def generate_original_data(data_dir, mutation_tool):
         headers = ["label", "mutant", "template",
                    "original", "person", "gender", "emotion"]
     elif mutation_tool ==  "mtnlp" :
-        headers = ["label", "mutant", "original", "mutation_type"]
+        headers = ["label", "mutant", "original",
+                   "template", "identifier", "mutation_type"]
     df = pd.read_csv(data_dir + "test.csv", header=None, sep="\t",
                      names=headers)
     ori_df = df[["label", "original"]]
