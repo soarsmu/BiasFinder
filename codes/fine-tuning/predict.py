@@ -71,39 +71,18 @@ def batch_tokenizer(tokenizer, test_texts, batch_size=5000):
     lb = i * batch_size # lower bound
     ub = (i+1) * batch_size # upper bound
 
-    ## TODO: 
-    ## token_type_ids does not works on several models
-    ## try to use key value
-    # == = Predict == =
-    # Namespace(batch_size=16, bias_type='country', model='microsoft/mpnet-base',
-    #           mutant='imdb', mutation_tool='biasfinder', task='imdb', type='original')
-    # Traceback(most recent call last):
-    #   File "predict.py", line 163, in <module >
-    #   predict()
-    #   File "predict.py", line 134, in predict
-    #   test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
-    #   File "predict.py", line 84, in batch_tokenizer
-    #   token_type_ids = np.array(curr_test_encodings['token_type_ids'])
-    #   File "/opt/conda/lib/python3.7/site-packages/transformers/tokenization_utils_base.py", line 237, in __getitem__
-    #   return self.data[item]
-    # KeyError: 'token_type_ids'
-    # facebook/muppet-roberta-base
-    # roberta-base
-    
-    input_ids = None
-    token_type_ids = None
-    attention_mask = None
-    while lb < n :
-        curr_test_encodings = tokenizer(test_texts[lb:ub], truncation=True, padding=True, max_length=512)
-        if str(type(input_ids)) == "<class 'numpy.ndarray'>":
-            input_ids = np.concatenate((input_ids, curr_test_encodings['input_ids']), axis=0)
-            token_type_ids = np.concatenate((token_type_ids, curr_test_encodings['token_type_ids']), axis=0)
-            attention_mask = np.concatenate((attention_mask, curr_test_encodings['attention_mask']), axis=0)
-        else :
-            input_ids = np.array(curr_test_encodings['input_ids'])
-            token_type_ids = np.array(curr_test_encodings['token_type_ids'])
-            attention_mask = np.array(curr_test_encodings['attention_mask'])
-            
+    encodings = {}
+    while lb < n:
+        curr_test_encodings = tokenizer(
+            test_texts[lb:ub], truncation=True, padding=True, max_length=512)
+        if len(list(encodings.keys())) > 0:
+            for key in curr_test_encodings.keys():
+                encodings[key] = np.concatenate(
+                    (encodings[key], curr_test_encodings[key]), axis=0)
+        else:
+            for key in curr_test_encodings.keys():
+                encodings[key] = np.array(curr_test_encodings[key])
+
         i += 1
         lb = i * batch_size  # lower bound
         ub = (i+1) * batch_size  # upper bound
@@ -111,9 +90,7 @@ def batch_tokenizer(tokenizer, test_texts, batch_size=5000):
         if ub > n :
             ub = n
     
-    return {'input_ids': input_ids, 
-            'token_type_ids': token_type_ids, 
-            'attention_mask': attention_mask}
+    return encodings
 
 
 def predict():
@@ -151,14 +128,10 @@ def predict():
     model_name = args.model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    if args.task == "imdb" :
-        if args.bias_type == "occupation" and args.type == "mutant":
-            test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
-        else :
-            test_encodings = tokenizer(test_texts, truncation=True, padding=True, max_length=512)
+    if args.task == "imdb" and args.bias_type == "occupation" and args.type == "mutant":
+        test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
     else :
-        test_encodings = tokenizer(
-            test_texts, truncation=True, padding=True, max_length=512)
+        test_encodings = tokenizer(test_texts, truncation=True, padding=True, max_length=512)
 
     test_dataset = CustomDataset(test_encodings, test_labels)
 
