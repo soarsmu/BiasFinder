@@ -80,6 +80,14 @@ def evaluate_btc(labels, predictions, mutants, templates, identifier, identifier
 
     return {"template": len(dft), "mutant": len(df), "btc": int(dft["btc"].sum())}
 
+def evaluate_btc_mtnlp(df):
+    template = len(df["template"].unique())
+    mutant = len(df["mutant"]) + len(df["original"].unique())
+    btc = evaluate_fairness_violation(
+        df["prediction"], df["original_prediction"])
+
+    return {"template": template, "mutant": mutant, "btc": btc}
+
 
 def evaluate_fairness_violation(predictions, original_predictions) :
     df = pd.DataFrame(
