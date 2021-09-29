@@ -25,6 +25,18 @@ def calculate_test_accuracy(task, model):
     return accuracy(test_labels, predicitons)
 
 
+def calculate_eec_accuracy(task, model):
+    label_path = f"../../data/eec/gender/{task}/test.csv"
+    pred_path = f"../../data/eec/gender/{task}/mutant-predictions/{model}.pkl"
+
+    test_df = pd.read_csv(label_path, header=None, sep="\t")
+
+    test_labels = test_df[0].values
+    predicitons = load_pickle(pred_path)
+
+    return accuracy(test_labels, predicitons)
+
+
 def calculate_pearson_correlation(task, model) :
     label_path = f"../../asset/{task}/test.csv"
     pred_path = f"../../asset/{task}/predictions/{model}.pkl"
