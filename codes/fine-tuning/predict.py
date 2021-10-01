@@ -105,14 +105,7 @@ def predict():
 
     if args.type == "mutant" :
         test_labels, test_texts = read_test_data(data_dir)
-        # if args.mutant == "imdb" :
-        #     test_labels, test_texts  = read_imdb_test(data_dir)
-        # elif args.mutant == "twitter_semeval" or args.mutant == "twitter_s140" :
-        #     test_labels, test_texts = read_twitter_test(data_dir)
-        # else :
-        #     raise ValueError("Unknown dataset used for generating mutants")
     elif args.type == "original" :
-        # if not os.path.exists(data_dir + "original.csv") :
         generate_original_data(data_dir, mutation_tool=args.mutation_tool)
         test_labels, test_texts = read_original_data(data_dir)
     else:
@@ -128,7 +121,7 @@ def predict():
     model_name = args.model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    if args.task == "imdb" and args.bias_type == "occupation" and args.type == "mutant":
+    if args.task == "imdb" and args.type == "mutant" and (args.bias_type == "occupation" or args.bias_type == "country"):
         test_encodings = batch_tokenizer(tokenizer, test_texts, batch_size=10000)
     else :
         test_encodings = tokenizer(test_texts, truncation=True, padding=True, max_length=512)
