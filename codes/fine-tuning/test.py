@@ -1,5 +1,5 @@
 import gc
-from utils import read_imdb_test, read_twitter_test, CustomDataset
+from utils import read_test_data, read_train_data, read_imdb_test, read_twitter_test, CustomDataset
 from torch.utils.data import DataLoader
 from pathlib import Path
 import json
@@ -34,6 +34,7 @@ def get_args():
     parser.add_argument('--dataset', default='imdb',
                         help='dataset for evaluating the performance of model')
     parser.add_argument('--batch-size', default=64, type=int)
+    parser.add_argument('--train', action='store_true')
 
     return parser.parse_args()
 
@@ -67,13 +68,11 @@ def test():
 
     data_dir = f"./../../asset/{args.dataset}/"
 
-    if args.dataset == "imdb":
-        test_labels, test_texts = read_imdb_test(data_dir)
-    elif args.dataset == "twitter_semeval" or args.dataset == "twitter_s140":
-        test_labels, test_texts = read_twitter_test(data_dir)
-    else:
-        raise ValueError("Unknown dataset used for generating mutants")
-
+    if args.train :
+        test_labels, test_texts = read_train_data(data_dir)
+    else :    
+        test_labels, test_texts = read_test_data(data_dir)
+    
     # test_texts = list(test_texts)[:100]
     # test_labels = list(test_labels)[:100]
 
@@ -105,7 +104,10 @@ def test():
     metrics = compute_metrics(y_pred, test_labels)
     print(metrics)
 
-    fpath = os.path.join(data_dir, f"predictions/{args.model}.pkl")
+    if args.train :
+        fpath = os.path.join(data_dir, f"train-predictions/{args.model}.pkl")
+    else :    
+        fpath = os.path.join(data_dir, f"predictions/{args.model}.pkl")
 
     parent_dir = "/".join(str(fpath).split('/')[:-1])
     if not os.path.exists(parent_dir):
