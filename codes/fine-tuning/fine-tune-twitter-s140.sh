@@ -1,4 +1,3 @@
-
 declare -a models=("bert-base-uncased" "bert-base-cased" "roberta-base" "xlnet-base-cased" "albert-base-v2" "microsoft/mpnet-base" "google/electra-base-generator" "facebook/muppet-roberta-base" "microsoft/deberta-base")
 
 for model in ${models[@]}; do
