@@ -7,13 +7,9 @@ short, predefined templates.
 
 To address this limitation, we present **BiasFinder**, an approach to discover biased predictions in SA systems via metamorphic testing. A key feature of BiasFinder is the automatic curation of suitable templates based on the pieces of text from a large corpus, using various Natural Language Processing (NLP) techniques to identify words that describe demographic characteristics. Next, BiasFinder instantiates new text from these templates by filling in placeholders with words associated with a class of a characteristic (e.g., gender-specific words such as female names, “she”, “her”). These texts are used to tease out bias in an SA system. 
 
-**BiasFinder** identifies a bias-uncovering test case when it detects that the SA system exhibits demographic bias for a pair of texts, i.e., it predicts a different sentiment for texts that differ only in words associated with a different class (e.g., male vs. female) of a target characteristic (e.g., gender). Our empirical evaluation showed that BiasFinder can effectively create a large number of realistic and diverse test cases that uncover various biases in an SA system with a high true positive rate.
+**BiasFinder** identifies a bias-uncovering test case (BTC) when it detects that the SA system exhibits demographic bias for a pair of texts, i.e., it predicts a different sentiment for texts that differ only in words associated with a different class (e.g., male vs. female) of a target characteristic (e.g., gender). Our empirical evaluation showed that BiasFinder can effectively create a large number of realistic and diverse test cases that uncover various biases in an SA system with a high true positive rate.
 
 ## Requirements
-
-<!-- For fine-tuning SA, we modify some codes from [Xuyige et al](https://arxiv.org/abs/1905.05583) at this Github repository https://github.com/xuyige/BERT4doc-Classification. Xuyige et al. implement the fine-tuning task using pytorch-pretrained-bert package (now well known as transformers). Thus, we need: -->
-
-<!-- + torch>=0.4.1,<=1.2.0 -> currently torch 1.2.0 with cuda 10.0 is used -->
 
 For fine-tuning SA, we use [HuggingFace](https://huggingface.co) library that provide many pre-trained language models, including BERT, RoBERTa, and XLNET.
 
@@ -54,41 +50,23 @@ dataset | description
 `asset/predefined_occupation_list/neutral-occupation.csv/` | It contains pre-determined words for neutral occupations 
 
 
-### 2) Prepare Google BERT
+### 2) Fine-Tune SA systems
 
-Please download [BERT-Base, Uncased](https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip) model. You will get `uncased_L-12_H-768_A-12` folder. Put it inside `models/`.
-
-
-### 3) Fine-Tune BERT on SA using IMDB
-
-#### Fine Tune BERT on SA
-
-Run this command inside the `codes/fine-tuning/` folder.
+Run this command inside the `codes/fine-tuning/` folder to fine-tune SA models.
 
 ```
-bash fine-tune.sh
+bash fine-tune-imdb.sh
+bash fine-tune-twitter-s140.sh
 ```
 
-**Important Parameter**
+Then check the test accuracy of the fine-tuned models
+```
+bash test-imdb.sh
+bash test-twitter-s140.sh
+```
 
-Parameter | Description
------------- | -------------
-`fine_tune_data_dir` | Data for fine-tuning on downstream task, currently IMDB. You need to put a training file, named `train.csv`, inside the folder
-`init_checkpoint` | PyTorch initial checkpoint for fine-tuning
-`save_model_dir` | The folder to save the fine-tuned model. The model will have several version based on the `num_train_epochs`
+Check the accuracy in `codes/evaluation/Model-Performance.ipynb`
 
-**Another Parameter**
-
-You can use the default parameters stated on the PyTorch BERT example.
-
-+ ``num_train_epochs`` can be 3.0, 5.0, or 6.0.
-+ ``layers`` indicates list of layers which will be taken as feature for classification.
--2 means use pooled output, -1 means concat all layer, the command above means concat
-layer-10 and layer-11 (last two layers).
-+ ``trunc_medium`` indicates dealing with long texts. -2 means head-only, -1 means tail-only,
-0 means head-half + tail-half (e.g.: head256+tail256),
-other natural number k means head-k + tail-rest (e.g.: head-k + tail-(512-k)).
-+ ``layer_learning_rate`` indicates layer-wise decreasing layer rate.
 
 ## Mutant Generation
 
@@ -100,7 +78,7 @@ BiasFinder automatically identifies and curates suitable texts in a large corpus
 Run this command inside the `codes/gender/` folder
 
 ```
-python main.py
+bash biasfinder-generate-mutant.sh
 ```
 
 Some trouble shooting:
@@ -131,73 +109,31 @@ This code will generate mutant texts for occupation and saved the mutant texts i
 Run this command inside the `codes/country/` folder
 
 ```
-python main.py
+bash generate-country-mutant.sh
 ```
 
 This code will generate mutant texts for country-of-origin and saved the mutant texts inside a folder `data/biasfinder/country/`
 
 ## Predict The Mutant Texts using Fine-tuned BERT
 
-### 1) Gender Bias
+### 1) IMDB Experiments
 Run this command inside the `codes/fine-tuning/` folder
 
 ```
-python predict.py \
-  --task_name binary \
-  --do_lower_case \
-  --eval_data_dir ./../../data/biasfinder/gender/ \
-  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
-  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
-  --seed 42 \
-  --layers 11 10 \
-  --trunc_medium -1 \
-  --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
-  --output_dir ./../../result/biasfinder/gender/
+bash predict-imdb.sh
 ```
 
-This code will produce a prediction of mutant texts inside the folder `result/biasfinder/gender/`
+This code will produce the prediction of mutant texts.
 
-### 2) Occupation Bias
+### 2) Twitter Experiments
 
 Run this command inside the `codes/fine-tuning/` folder
 
 ```
-python predict.py \
-  --task_name binary \
-  --do_lower_case \
-  --eval_data_dir ./../../data/biasfinder/occupation/ \
-  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
-  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
-  --seed 42 \
-  --layers 11 10 \
-  --trunc_medium -1 \
-  --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
-  --output_dir ./../../result/biasfinder/occupation/
-
+bash predict-twitter-s140.sh
 ```
 
-This code will produce a prediction of mutant texts inside the folder `result/biasfinder/occupation/`
-
-### 3) Country-of-origin Bias
-
-Run this command inside the `codes/fine-tuning/` folder
-
-```
-python predict.py \
-  --task_name binary \
-  --do_lower_case \
-  --eval_data_dir ./../../data/biasfinder/country/ \
-  --vocab_file ./../../models/uncased_L-12_H-768_A-12/vocab.txt \
-  --bert_config_file ./../../models/uncased_L-12_H-768_A-12/bert_config.json \
-  --seed 42 \
-  --layers 11 10 \
-  --trunc_medium -1 \
-  --init_checkpoint ./../../models/fine-tuning/pytorch_imdb_fine_tuned/epoch5.pt \
-  --output_dir ./../../result/biasfinder/country/
-```
-
-This code will produce a prediction of mutant texts inside the folder `result/biasfinder/country/`
-
+This code will produce the prediction of mutant texts.
 
 
 ## Measuring the Bias Uncovering Test Case (BTC)
@@ -211,102 +147,12 @@ Example of BTC for gender bias:
 
 ### 1) Gender Bias
 
-Notebook `codes/gender/BTC.ipynb` contains the BTC calculation for gender bias targeting mutant texts.
+Notebook `evaluation/BTC-Gender.ipynb` contains the BTC calculation for gender bias targeting mutant texts.
 
 ### 2) Occupation Bias
 
-Notebook `codes/occupation/BTC.ipynb` contains the BTC calculation for occupation bias targeting mutant texts.
+Notebook `evaluation/BTC-Occupation.ipynb` contains the BTC calculation for occupation bias targeting mutant texts.
 
 ### 3) Country-of-origin Bias
 
-Notebook `codes/country/BTC.ipynb` contains the BTC calculation for country-of-origin bias targeting mutant texts.
-
-## Notes
-Here the final file structure to better know where to put the models and data:
-
-```
-.
-|-- LICENSE
-|-- README.md
-|-- asset
-|   |-- gender_associated_word
-|   |   |-- masculine-feminine-cleaned.txt
-|   |   |-- masculine-feminine-person.txt
-|   |   `-- masculine-feminine.txt
-|   |-- gender_computer
-|   |   |-- female_names_only.csv
-|   |   |-- male_names_only.csv
-|   |   |-- unique_female_names_and_country.csv
-|   |   `-- unique_male_names_and_country.csv
-|   |-- imdb
-|   |   |-- test.csv
-|   |   `-- train.csv
-|   |-- imdb_small
-|   |   |-- test.csv
-|   |   `-- train.csv
-|   `-- predefined_occupation_list
-|       `-- neutral-occupation.csv 
-|-- codes
-|   |-- country
-|   |   |-- BTC.ipynb
-|   |   |-- Coreference.py
-|   |   |-- CountryMutantGeneration.py
-|   |   |-- Entity.py
-|   |   |-- Phrase.py
-|   |   |-- main.py
-|   |   |-- mutant-generation-example-for-testing.ipynb
-|   |   `-- utils.py
-|   |-- occupation
-|   |   |-- BTC.ipynb
-|   |   |-- Coreference.py
-|   |   |-- CountryMutantGeneration.py
-|   |   |-- Entity.py
-|   |   |-- Phrase.py
-|   |   |-- main.py
-|   |   |-- mutant-generation-example-for-testing.ipynb
-|   |   `-- utils.py
-|   `-- gender
-|       |-- BTC.ipynb
-|       |-- Coreference.py
-|       |-- MutantGeneration.py
-|       |-- Entity.py
-|       |-- Phrase.py
-|       |-- main.py
-|       |-- mutant-generation-example-for-testing.ipynb
-|       `-- utils.py
-|-- data
-|   `-- biasfinder
-|       |-- country
-|       |   `-- test.csv
-|       |-- gender
-|       |   `-- test.csv
-|       `-- occupation
-|           `-- test.csv
-|-- models
-|   |-- fine-tuning
-|   |   |-- pytorch_bert_base_model.bin
-|   |   `-- pytorch_imdb_fine_tuned
-|   |       |-- epoch1.pt
-|   |       |-- epoch2.pt
-|   |       |-- epoch3.pt
-|   |       |-- epoch4.pt
-|   |       `-- epoch5.pt
-|   `-- uncased_L-12_H-768_A-12
-|       |-- bert_config.json
-|       |-- bert_model.ckpt.data-00000-of-00001
-|       |-- bert_model.ckpt.index
-|       |-- bert_model.ckpt.meta
-|       `-- vocab.txt
-`-- result
-    `-- biasfinder
-        |-- country
-        |   |-- eval_data_results.txt
-        |   `-- results_data.txt
-        |-- gender
-        |   |-- eval_data_results.txt
-        |   `-- results_data.txt
-        `-- occupation
-            |-- eval_data_results.txt
-            `-- results_data.txt
-    
-```
+Notebook `evaluation/BTC-Country.ipynb` contains the BTC calculation for country-of-origin bias targeting mutant texts.
